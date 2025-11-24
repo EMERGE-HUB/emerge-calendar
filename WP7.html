@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EMERGE – WP7 Calendar</title>
+
+  <!-- FullCalendar Premium (Scheduler) bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.19/index.global.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #004f9f;
+      color: #fff;
+      padding: 16px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 6px;
+      height: 60px;
+    }
+
+    .header-text h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .header-text p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 12px 40px;
+    }
+
+    #status {
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    #status.error {
+      color: #b00020;
+    }
+
+    #calendar {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    /* Simple modal for event details */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 9999;
+    }
+
+    .modal-backdrop.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      max-width: 520px;
+      width: 92%;
+      padding: 20px 22px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-body p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+    }
+
+    .modal-body p span.label {
+      font-weight: 600;
+    }
+
+    .modal-footer {
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn:hover {
+      background: #e5e7eb;
+    }
+
+    .wp-nav {
+      background: #ffffff;
+      padding: 10px 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+    }
+
+    .wp-nav a {
+      color: #004f9f;
+      text-decoration: none;
+      font-weight: 600;
+      padding-bottom: 2px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .wp-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .wp-nav a.active {
+      border-bottom-color: #004f9f;
+    }
+
+    .wp-nav .divider {
+      color: #666;
+      margin: 0 6px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .header-text h1 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-container">
+    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
+         alt="EMERGE Logo"
+         class="header-logo" />
+
+    <div class="header-text">
+      <h1>EMERGE – WP7 Calendar</h1>
+      <p>Key meetings and milestones for Work Package WP7</p>
+    </div>
+  </div>
+</header>
+
+<nav class="wp-nav">
+  <a href="WP1.html">WP1</a>
+  <a href="WP2.html">WP2</a>
+  <a href="WP3.html">WP3</a>
+  <a href="WP4.html">WP4</a>
+  <a href="WP5.html">WP5</a>
+  <a href="WP6.html">WP6</a>
+  <a href="WP7.html">WP7</a>
+  <a href="WP8.html">WP8</a>
+  <a href="WP9.html">WP9</a>
+
+  <span class="divider">|</span>
+
+  <a href="events.html">Events Calendar</a>
+  <a href="meetings.html">Meetings Calendar</a>
+  <a href="meetings-events.html">Meetings &amp; Events</a>
+  <a href="all.html">All Calendar</a>
+</nav>
+
+<main>
+  <div id="status">Loading WP7 calendar…</div>
+  <div id="calendar"></div>
+</main>
+
+<!-- Event detail modal -->
+<div id="eventModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><span class="label">When:</span> <span id="modalWhen"></span></p>
+      <p><span class="label">Location:</span> <span id="modalLocation"></span></p>
+      <p><span class="label">Description:</span></p>
+      <p id="modalDescription"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="modalOkBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/WP7.ics';
+  const FULLCAL_LICENSE_KEY = 'CC-Attribution-NonCommercial-NoDerivatives';
+
+  function parseICS(icsText) {
+    const rawLines = icsText.split(/\r?\n/);
+    const lines = [];
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      if (!line) continue;
+      if (line.startsWith(' ') || line.startsWith('\t')) {
+        if (lines.length > 0) {
+          lines[lines.length - 1] += line.slice(1);
+        }
+      } else {
+        lines.push(line);
+      }
+    }
+
+    const vevents = [];
+    let current = null;
+
+    for (const line of lines) {
+      if (line.startsWith('BEGIN:VEVENT')) {
+        current = {};
+        continue;
+      }
+      if (line.startsWith('END:VEVENT')) {
+        if (current) vevents.push(current);
+        current = null;
+        continue;
+      }
+      if (!current) continue;
+
+      const parts = line.split(':');
+      if (parts.length < 2) continue;
+      const value = parts.slice(1).join(':');
+      const keyWithParams = parts[0];
+      const key = keyWithParams.split(';')[0].toUpperCase();
+
+      switch (key) {
+        case 'SUMMARY':
+          current.summary = value;
+          break;
+        case 'DESCRIPTION':
+          current.description = value.replace(/\\n/g, '\n');
+          break;
+        case 'LOCATION':
+          current.location = value;
+          break;
+        case 'DTSTART':
+          current.dtstart = value;
+          break;
+        case 'DTEND':
+          current.dtend = value;
+          break;
+        default:
+          break;
+      }
+    }
+
+    function parseICSTime(v) {
+      if (!v) return null;
+      if (v.length === 8 && !v.includes('T')) {
+        const y = parseInt(v.slice(0,4), 10);
+        const m = parseInt(v.slice(4,6), 10) - 1;
+        const d = parseInt(v.slice(6,8), 10);
+        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+      }
+      const y = parseInt(v.slice(0,4), 10);
+      const m = parseInt(v.slice(4,6), 10) - 1;
+      const d = parseInt(v.slice(6,8), 10);
+      const hh = parseInt(v.slice(9,11) || '0', 10);
+      const mm = parseInt(v.slice(11,13) || '0', 10);
+      const ss = parseInt(v.slice(13,15) || '0', 10);
+      if (v.endsWith('Z')) {
+        return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
+      } else {
+        return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
+      }
+    }
+
+    const events = vevents.map(ev => {
+      const startParsed = parseICSTime(ev.dtstart);
+      const endParsed = parseICSTime(ev.dtend);
+      const allDay = startParsed ? startParsed.allDay : false;
+
+      return {
+        title: ev.summary || '(no title)',
+        start: startParsed ? startParsed.date : null,
+        end: endParsed ? endParsed.date : null,
+        allDay: allDay,
+        extendedProps: {
+          description: ev.description || '',
+          location: ev.location || ''
+        }
+      };
+    });
+
+    return events.filter(e => e.start);
+  }
+
+  function formatDateRange(start, end, allDay) {
+    if (!start) return 'Unknown';
+    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit' };
+
+    if (allDay) {
+      if (end) {
+        return start.toLocaleDateString(undefined, optionsDate) +
+               ' – ' +
+               end.toLocaleDateString(undefined, optionsDate);
+      }
+      return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
+    } else {
+      let text = start.toLocaleDateString(undefined, optionsDate) +
+                 ' ' +
+                 start.toLocaleTimeString(undefined, optionsTime);
+      if (end) {
+        text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
+      }
+      return text;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const statusEl = document.getElementById('status');
+
+    const modalBackdrop = document.getElementById('eventModalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalWhen = document.getElementById('modalWhen');
+    const modalLocation = document.getElementById('modalLocation');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalOkBtn = document.getElementById('modalOkBtn');
+
+    function closeModal() {
+      modalBackdrop.classList.remove('show');
+    }
+
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalOkBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', function(e) {
+      if (e.target === modalBackdrop) {
+        closeModal();
+      }
+    });
+
+    // highlight active nav link
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.wp-nav a').forEach(a => {
+      const href = a.getAttribute('href');
+      if (href === path) {
+        a.classList.add('active');
+      }
+    });
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      licenseKey: FULLCAL_LICENSE_KEY,
+      initialView: 'listYear',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineYear'
+      },
+      views: {
+        listYear: {
+          buttonText: 'Year list'
+        },
+        multiMonthYear: {
+          buttonText: 'Year grid'
+        },
+        timelineYear: {
+          buttonText: 'Year timeline'
+        }
+      },
+      eventClick: function(info) {
+        const desc = info.event.extendedProps.description || 'No description provided.';
+        const loc = info.event.extendedProps.location || 'Not specified';
+        const when = formatDateRange(info.event.start, info.event.end, info.event.allDay);
+
+        modalTitle.textContent = info.event.title;
+        modalWhen.textContent = when;
+        modalLocation.textContent = loc;
+        modalDescription.textContent = desc;
+
+        modalBackdrop.classList.add('show');
+      }
+    });
+
+    calendar.render();
+
+    statusEl.textContent = 'Loading WP7 calendar…';
+
+    fetch(ICS_URL)
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        return response.text();
+      })
+      .then(function(text) {
+        const events = parseICS(text);
+        calendar.addEventSource(events);
+        statusEl.textContent = 'WP7 calendar loaded (' + events.length + ' events).';
+      })
+      .catch(function(err) {
+        console.error('Error loading ICS:', err);
+        statusEl.textContent = 'Could not load WP7 calendar – please check the ICS URL or CORS settings.';
+        statusEl.classList.add('error');
+      });
+  });
+</script>
+
+</body>
+</html>
