@@ -34,6 +34,36 @@
       opacity: 0.9;
     }
 
+    header {
+  background: #004f9f;
+  color: #fff;
+  padding: 16px 24px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 6px;
+  height: 60px;           /* adjust size to taste */
+}
+
+.header-text h1 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.header-text p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
     main {
       max-width: 1100px;
       margin: 24px auto;
@@ -144,12 +174,18 @@
 <body>
 
 <header>
-  <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
-       alt="EMERGE Logo"
-       style="height:48px; vertical-align:middle; margin-right:12px;" />
-  <h1>EMERGE – WP1 Calendar</h1>
-  <p>Key meetings and milestones for Work Package 1</p>
+  <div class="header-container">
+    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
+         alt="EMERGE Logo"
+         class="header-logo" />
+
+    <div class="header-text">
+      <h1>EMERGE – WP1 Calendar</h1>
+      <p>Key meetings and milestones for Work Package 1</p>
+    </div>
+  </div>
 </header>
+
 
 <main>
   <div id="status">Loading WP1 calendar…</div>
@@ -392,4 +428,5 @@
 
 </body>
 </html>
+
 
