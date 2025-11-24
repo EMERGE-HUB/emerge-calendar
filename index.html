@@ -164,6 +164,36 @@
       background: #e5e7eb;
     }
 
+.wp-nav {
+  background: #ffffff;
+  padding: 10px 20px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  font-size: 0.9rem;
+}
+
+.wp-nav a {
+  color: #004f9f;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.wp-nav a:hover {
+  text-decoration: underline;
+}
+
+.wp-nav .divider {
+  color: #666;
+  margin: 0 6px;
+  font-weight: 600;
+}
+
+    
     @media (max-width: 600px) {
       header h1 {
         font-size: 1.1rem;
@@ -186,6 +216,24 @@
   </div>
 </header>
 
+<nav class="wp-nav">
+  <a href="WP1.html">WP1</a>
+  <a href="WP2.html">WP2</a>
+  <a href="WP3.html">WP3</a>
+  <a href="WP4.html">WP4</a>
+  <a href="WP5.html">WP5</a>
+  <a href="WP6.html">WP6</a>
+  <a href="WP7.html">WP7</a>
+  <a href="WP8.html">WP8</a>
+  <a href="WP9.html">WP9</a>
+
+  <span class="divider">|</span>
+
+  <a href="events.html">Events Calendar</a>
+  <a href="meetings.html">Meetings Calendar</a>
+  <a href="meetings-events.html">Meetings &amp; Events</a>
+  <a href="all.html">All Calendar</a>
+</nav>
 
 <main>
   <div id="status">Loading WP1 calendar…</div>
@@ -428,6 +476,7 @@
 
 </body>
 </html>
+
 
 
 
