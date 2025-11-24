@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <title>EMERGE – WP1 Calendar</title>
 
-  <!-- FullCalendar CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
+  <!-- FullCalendar Premium (Scheduler) bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.15/index.global.min.js"></script>
 
   <style>
     body {
@@ -172,13 +172,12 @@
   </div>
 </div>
 
-<!-- FullCalendar JS (global build) -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
 <script>
-  // TODO: put your real WP1 ICS URL here:
-  // e.g. const ICS_URL = 'https://your-bucket-name.r2.cloudflarestorage.com/wp1.ics';
+  // 👉 SET THIS to your real WP1 ICS URL (R2 or Worker)
   const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/wp1.ics';
+
+  // 👉 SET THIS to your FullCalendar Premium licence key
+  const FULLCAL_LICENSE_KEY = 'CC-Attribution-NonCommercial-NoDerivatives';
 
   // Very small iCalendar (ICS) parser -> FullCalendar events
   function parseICS(icsText) {
@@ -331,11 +330,23 @@
     });
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
+      licenseKey: FULLCAL_LICENSE_KEY,  // Premium licence key
       initialView: 'dayGridMonth',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineYear'
+      },
+      views: {
+        listYear: {
+          buttonText: 'Year list'
+        },
+        multiMonthYear: {
+          buttonText: 'Year grid'
+        },
+        timelineYear: {
+          buttonText: 'Year timeline'
+        }
       },
       eventClick: function(info) {
         const desc = info.event.extendedProps.description || 'No description provided.';
@@ -378,4 +389,3 @@
 
 </body>
 </html>
-
