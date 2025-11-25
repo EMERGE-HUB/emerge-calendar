@@ -35,34 +35,34 @@
     }
 
     header {
-  background: #004f9f;
-  color: #fff;
-  padding: 16px 24px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
+      background: #004f9f;
+      color: #fff;
+      padding: 16px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
-.header-container {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+    .header-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
-.header-logo {
-  background: #ffffff;
-  padding: 6px;
-  border-radius: 6px;
-  height: 60px;           /* adjust size to taste */
-}
+    .header-logo {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 6px;
+      height: 60px;           /* adjust size to taste */
+    }
 
-.header-text h1 {
-  margin: 0;
-  font-size: 1.3rem;
-}
+    .header-text h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
 
-.header-text p {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-}
+    .header-text p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+    }
 
     main {
       max-width: 1100px;
@@ -164,36 +164,103 @@
       background: #e5e7eb;
     }
 
-.wp-nav {
-  background: #ffffff;
-  padding: 10px 20px;
-  margin: 0 auto 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  font-size: 0.9rem;
-}
+    .wp-nav {
+      background: #ffffff;
+      padding: 10px 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+    }
 
-.wp-nav a {
-  color: #004f9f;
-  text-decoration: none;
-  font-weight: 600;
-}
+    .wp-nav a {
+      color: #004f9f;
+      text-decoration: none;
+      font-weight: 600;
+    }
 
-.wp-nav a:hover {
-  text-decoration: underline;
-}
+    .wp-nav a:hover {
+      text-decoration: underline;
+    }
 
-.wp-nav .divider {
-  color: #666;
-  margin: 0 6px;
-  font-weight: 600;
-}
+    .wp-nav .divider {
+      color: #666;
+      margin: 0 6px;
+      font-weight: 600;
+    }
 
-    
+    /* ========= CATEGORY COLOURING FOR EVENTS =========
+       These depend on the [Label] prefix in SUMMARY,
+       e.g. [Deliverable] Some title
+    */
+
+    /* Deliverable – teal */
+    .fc-event.cat-deliverable,
+    .fc-daygrid-event.cat-deliverable,
+    .fc-list-event.cat-deliverable {
+      background-color: #009688 !important;
+      border-color: #009688 !important;
+      color: #ffffff !important;
+    }
+
+    /* Milestone – amber */
+    .fc-event.cat-milestone,
+    .fc-daygrid-event.cat-milestone,
+    .fc-list-event.cat-milestone {
+      background-color: #ffb300 !important;
+      border-color: #ffb300 !important;
+      color: #000000 !important;
+    }
+
+    /* Meeting – green */
+    .fc-event.cat-meeting,
+    .fc-daygrid-event.cat-meeting,
+    .fc-list-event.cat-meeting {
+      background-color: #2e7d32 !important;
+      border-color: #2e7d32 !important;
+      color: #ffffff !important;
+    }
+
+    /* Task – purple */
+    .fc-event.cat-task,
+    .fc-daygrid-event.cat-task,
+    .fc-list-event.cat-task {
+      background-color: #6a1b9a !important;
+      border-color: #6a1b9a !important;
+      color: #ffffff !important;
+    }
+
+    /* Event – red */
+    .fc-event.cat-event,
+    .fc-daygrid-event.cat-event,
+    .fc-list-event.cat-event {
+      background-color: #c62828 !important;
+      border-color: #c62828 !important;
+      color: #ffffff !important;
+    }
+
+    /* Project Task – deep orange */
+    .fc-event.cat-project-task,
+    .fc-daygrid-event.cat-project-task,
+    .fc-list-event.cat-project-task {
+      background-color: #ef6c00 !important;
+      border-color: #ef6c00 !important;
+      color: #ffffff !important;
+    }
+
+    /* Other – grey */
+    .fc-event.cat-other,
+    .fc-daygrid-event.cat-other,
+    .fc-list-event.cat-other {
+      background-color: #607d8b !important;
+      border-color: #607d8b !important;
+      color: #ffffff !important;
+    }
+
     @media (max-width: 600px) {
       header h1 {
         font-size: 1.1rem;
@@ -435,6 +502,18 @@
           buttonText: 'Year timeline'
         }
       },
+
+      // 🔹 Add a CSS class based on the [Label] in the event title
+      eventClassNames: function(info) {
+        const title = info.event.title || '';
+        // Match [Label] at the start of the title
+        const match = title.match(/^\[(.*?)\]/);
+        if (!match) return [];
+        const label = match[1].trim();         // e.g. Deliverable, Milestone, Meeting, Task, Event, Project Task, Other
+        const safe = label.toLowerCase().replace(/\s+/g, '-'); // e.g. deliverable, project-task
+        return [ 'cat-' + safe ];
+      },
+
       eventClick: function(info) {
         const desc = info.event.extendedProps.description || 'No description provided.';
         const loc = info.event.extendedProps.location || 'Not specified';
@@ -476,8 +555,3 @@
 
 </body>
 </html>
-
-
-
-
-
