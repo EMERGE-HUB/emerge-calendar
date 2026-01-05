@@ -85,10 +85,12 @@
       font-weight: 600;
     }
 
+    /* UPDATED: remove max-width cap so the timeline can use the screen */
     main {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: 0 12px 40px;
+      max-width: none;
+      width: 100%;
+      margin: 16px auto;
+      padding: 0 16px 40px;
     }
 
     #status {
@@ -101,7 +103,7 @@
     .card {
       background: #fff;
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
@@ -125,9 +127,11 @@
     }
     .btn:hover { background: #e5e7eb; }
 
-    /* Important: ensure the container has a clear height */
+    /* UPDATED: fill viewport height better */
     #timeline {
-      height: 680px;
+      height: calc(100vh - 260px);
+      min-height: 520px;
+      width: 100%;
       border: 1px solid #e6e8ef;
       border-radius: 8px;
     }
@@ -187,7 +191,8 @@
 
     @media (max-width: 600px) {
       .header-text h1 { font-size: 1.1rem; }
-      #timeline { height: 520px; }
+      /* keep height sensible on mobile, but still responsive */
+      #timeline { height: calc(100vh - 300px); min-height: 420px; }
     }
   </style>
 </head>
@@ -281,9 +286,9 @@
     statusEl.classList.add('error');
   }
 
-  // Hard check: did vis libraries load?
+  // UPDATED: correct error handling (no mention of jsDelivr)
   if (!window.vis || !vis.DataSet || !vis.Timeline) {
-    setError('Timeline libraries failed to load. Please check network access to jsDelivr.');
+    setError('Timeline libraries failed to load. Check that /vendor/moment.min.js, /vendor/vis-data.min.js and /vendor/vis-timeline-graph2d.min.js load with HTTP 200, then review the browser console for blocked-script errors.');
     throw new Error('vis libraries missing');
   }
 
@@ -374,11 +379,15 @@
   const groups = new vis.DataSet([{ id: 'WP1', content: 'WP1' }]);
   const items = new vis.DataSet();
 
+  // UPDATED: a couple of timeline options for readability, no functional breakage
   const timeline = new vis.Timeline(container, items, groups, {
     stack: true,
     horizontalScroll: true,
     zoomKey: 'ctrlKey',
-    orientation: { axis: 'top' }
+    orientation: { axis: 'top' },
+    margin: { item: 10, axis: 10 },
+    showMajorLabels: true,
+    showMinorLabels: true
   });
 
   // Controls
@@ -434,6 +443,8 @@
 
   async function loadTimeline() {
     statusEl.textContent = 'Loading WP1 timeline from ICS…';
+    statusEl.classList.remove('error');
+
     try {
       const resp = await fetch(ICS_URL);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -462,7 +473,7 @@
       if (evs.length > 0) timeline.fit();
     } catch (e) {
       console.error('Timeline load failed:', e);
-      setError('Could not load WP1 timeline – please check the ICS URL or CORS settings.');
+      setError('Could not load WP1 timeline from the ICS feed. Check the ICS URL and browser network/console. Details: ' + (e && e.message ? e.message : e));
     }
   }
 
