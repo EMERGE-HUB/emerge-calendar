@@ -1,15 +1,13 @@
-<!-- touch: force redeploy -->
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <title>EMERGE – WP1 Timeline</title>
 
-  <!-- vis-timeline (MIT licence, free) -->
-  <link rel="stylesheet" href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css">
-  <script src="https://unpkg.com/vis-data@7.1.6/peer/umd/vis-data.min.js"></script>
-  <script src="https://unpkg.com/vis-timeline@7.7.3/peer/umd/vis-timeline-graph2d.min.js"></script>
+  <!-- vis-timeline (MIT licence, free) - jsDelivr (reliable) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/vis-data@7.1.6/peer/umd/vis-data.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vis-timeline@7.7.3/peer/umd/vis-timeline-graph2d.min.js"></script>
 
   <style>
     body {
@@ -105,10 +103,6 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
-    #timeline {
-      height: 680px;
-    }
-
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -128,6 +122,13 @@
       font-weight: 600;
     }
     .btn:hover { background: #e5e7eb; }
+
+    /* Important: ensure the container has a clear height */
+    #timeline {
+      height: 680px;
+      border: 1px solid #e6e8ef;
+      border-radius: 8px;
+    }
 
     /* Modal */
     .modal-backdrop {
@@ -257,7 +258,6 @@
 </div>
 
 <script>
-  // WP1 ICS URL (same as your WP1 calendar)
   const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/wp1.ics';
 
   // Active link highlight in nav
@@ -269,17 +269,26 @@
     });
   })();
 
-  // Back button
   document.getElementById('backBtn').addEventListener('click', () => {
     window.location.href = 'WP1.html';
   });
 
-  // --- ICS parsing ---
+  const statusEl = document.getElementById('status');
+  function setError(msg) {
+    statusEl.textContent = msg;
+    statusEl.classList.add('error');
+  }
+
+  // Hard check: did vis libraries load?
+  if (!window.vis || !vis.DataSet || !vis.Timeline) {
+    setError('Timeline libraries failed to load. Please check network access to jsDelivr.');
+    throw new Error('vis libraries missing');
+  }
+
   function parseICS(icsText) {
     const rawLines = icsText.split(/\r?\n/);
     const lines = [];
-    for (let i = 0; i < rawLines.length; i++) {
-      const line = rawLines[i];
+    for (const line of rawLines) {
       if (!line) continue;
       if (line.startsWith(' ') || line.startsWith('\t')) {
         if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
@@ -301,19 +310,16 @@
       const value = parts.slice(1).join(':');
       const key = parts[0].split(';')[0].toUpperCase();
 
-      switch (key) {
-        case 'SUMMARY': current.summary = value; break;
-        case 'DESCRIPTION': current.description = value.replace(/\\n/g, '\n'); break;
-        case 'LOCATION': current.location = value; break;
-        case 'DTSTART': current.dtstart = value; break;
-        case 'DTEND': current.dtend = value; break;
-      }
+      if (key === 'SUMMARY') current.summary = value;
+      if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
+      if (key === 'LOCATION') current.location = value;
+      if (key === 'DTSTART') current.dtstart = value;
+      if (key === 'DTEND') current.dtend = value;
     }
 
     function parseICSTime(v) {
       if (!v) return null;
 
-      // All-day date (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
         const m = parseInt(v.slice(4,6), 10) - 1;
@@ -321,7 +327,6 @@
         return { date: new Date(Date.UTC(y, m, d)), allDay: true };
       }
 
-      // Date-time, optionally Z
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
@@ -362,12 +367,11 @@
     return text;
   }
 
-  // --- Timeline render ---
-  const statusEl = document.getElementById('status');
   const container = document.getElementById('timeline');
 
   const groups = new vis.DataSet([{ id: 'WP1', content: 'WP1' }]);
   const items = new vis.DataSet();
+
   const timeline = new vis.Timeline(container, items, groups, {
     stack: true,
     horizontalScroll: true,
@@ -413,7 +417,6 @@
   modalOkBtn.addEventListener('click', closeModal);
   modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
 
-  // Click item => modal
   timeline.on('select', function(props) {
     if (!props.items || props.items.length === 0) return;
     const id = props.items[0];
@@ -457,8 +460,7 @@
       if (evs.length > 0) timeline.fit();
     } catch (e) {
       console.error('Timeline load failed:', e);
-      statusEl.textContent = 'Could not load WP1 timeline – please check the ICS URL or CORS settings.';
-      statusEl.classList.add('error');
+      setError('Could not load WP1 timeline – please check the ICS URL or CORS settings.');
     }
   }
 
