@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EMERGE – WP1 Timeline</title>
+
+  <!-- vis-timeline (MIT licence, free) -->
+  <link rel="stylesheet" href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css">
+  <script src="https://unpkg.com/vis-data@7.1.6/peer/umd/vis-data.min.js"></script>
+  <script src="https://unpkg.com/vis-timeline@7.7.3/peer/umd/vis-timeline-graph2d.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #004f9f;
+      color: #fff;
+      padding: 16px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 6px;
+      height: 60px;
+    }
+
+    .header-text h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .header-text p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .wp-nav {
+      background: #ffffff;
+      padding: 10px 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+    }
+
+    .wp-nav a {
+      color: #004f9f;
+      text-decoration: none;
+      font-weight: 600;
+      padding-bottom: 2px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .wp-nav a:hover { text-decoration: underline; }
+
+    .wp-nav a.active {
+      border-bottom-color: #004f9f;
+      text-decoration: none;
+    }
+
+    .wp-nav .divider {
+      color: #666;
+      margin: 0 6px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 12px 40px;
+    }
+
+    #status {
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    #status.error { color: #b00020; }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    #timeline {
+      height: 680px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn:hover { background: #e5e7eb; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 9999;
+    }
+    .modal-backdrop.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      max-width: 520px;
+      width: 92%;
+      padding: 20px 22px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .modal-close {
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-body p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+    }
+    .modal-body p span.label { font-weight: 600; }
+    .modal-footer {
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 600px) {
+      .header-text h1 { font-size: 1.1rem; }
+      #timeline { height: 520px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="header-container">
+    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
+         alt="EMERGE Logo"
+         class="header-logo" />
+    <div class="header-text">
+      <h1>EMERGE – WP1 Timeline</h1>
+      <p>Timeline view for Work Package 1 (from wp1.ics)</p>
+    </div>
+  </div>
+</header>
+
+<nav class="wp-nav">
+  <a href="WP1.html">WP1</a>
+  <a href="WP2.html">WP2</a>
+  <a href="WP3.html">WP3</a>
+  <a href="WP4.html">WP4</a>
+  <a href="WP5.html">WP5</a>
+  <a href="WP6.html">WP6</a>
+  <a href="WP7.html">WP7</a>
+  <a href="WP8.html">WP8</a>
+  <a href="WP9.html">WP9</a>
+
+  <span class="divider">|</span>
+
+  <a href="events.html">Events Calendar</a>
+  <a href="meetings.html">Meetings Calendar</a>
+  <a href="meetings-events.html">Meetings &amp; Events</a>
+  <a href="all.html">All Calendar</a>
+</nav>
+
+<main>
+  <div id="status">Loading WP1 timeline…</div>
+
+  <div class="card">
+    <div class="controls">
+      <button class="btn" id="zoomInBtn">Zoom in</button>
+      <button class="btn" id="zoomOutBtn">Zoom out</button>
+      <button class="btn" id="fitBtn">Fit all</button>
+      <button class="btn" id="yearBtn">This year</button>
+      <button class="btn" id="backBtn">Back to calendar</button>
+    </div>
+
+    <div id="timeline"></div>
+  </div>
+</main>
+
+<!-- Event detail modal -->
+<div id="eventModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><span class="label">When:</span> <span id="modalWhen"></span></p>
+      <p><span class="label">Location:</span> <span id="modalLocation"></span></p>
+      <p><span class="label">Description:</span></p>
+      <p id="modalDescription"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="modalOkBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // WP1 ICS URL (same as your WP1 calendar)
+  const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/wp1.ics';
+
+  // Active link highlight in nav
+  (function markActiveNav() {
+    const path = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    document.querySelectorAll('.wp-nav a').forEach(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      if (href === path) a.classList.add('active');
+    });
+  })();
+
+  // Back button
+  document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = 'WP1.html';
+  });
+
+  // --- ICS parsing ---
+  function parseICS(icsText) {
+    const rawLines = icsText.split(/\r?\n/);
+    const lines = [];
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      if (!line) continue;
+      if (line.startsWith(' ') || line.startsWith('\t')) {
+        if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
+      } else {
+        lines.push(line);
+      }
+    }
+
+    const vevents = [];
+    let current = null;
+
+    for (const line of lines) {
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
+      if (line.startsWith('END:VEVENT')) { if (current) vevents.push(current); current = null; continue; }
+      if (!current) continue;
+
+      const parts = line.split(':');
+      if (parts.length < 2) continue;
+      const value = parts.slice(1).join(':');
+      const key = parts[0].split(';')[0].toUpperCase();
+
+      switch (key) {
+        case 'SUMMARY': current.summary = value; break;
+        case 'DESCRIPTION': current.description = value.replace(/\\n/g, '\n'); break;
+        case 'LOCATION': current.location = value; break;
+        case 'DTSTART': current.dtstart = value; break;
+        case 'DTEND': current.dtend = value; break;
+      }
+    }
+
+    function parseICSTime(v) {
+      if (!v) return null;
+
+      // All-day date (YYYYMMDD)
+      if (v.length === 8 && !v.includes('T')) {
+        const y = parseInt(v.slice(0,4), 10);
+        const m = parseInt(v.slice(4,6), 10) - 1;
+        const d = parseInt(v.slice(6,8), 10);
+        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+      }
+
+      // Date-time, optionally Z
+      const y = parseInt(v.slice(0,4), 10);
+      const m = parseInt(v.slice(4,6), 10) - 1;
+      const d = parseInt(v.slice(6,8), 10);
+      const hh = parseInt(v.slice(9,11) || '0', 10);
+      const mm = parseInt(v.slice(11,13) || '0', 10);
+      const ss = parseInt(v.slice(13,15) || '0', 10);
+
+      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
+    }
+
+    return vevents.map(ev => {
+      const startParsed = parseICSTime(ev.dtstart);
+      const endParsed = parseICSTime(ev.dtend);
+      return {
+        title: ev.summary || '(no title)',
+        start: startParsed ? startParsed.date : null,
+        end: endParsed ? endParsed.date : null,
+        allDay: startParsed ? startParsed.allDay : false,
+        description: ev.description || '',
+        location: ev.location || ''
+      };
+    }).filter(e => e.start);
+  }
+
+  function formatDateRange(start, end, allDay) {
+    if (!start) return 'Unknown';
+    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit' };
+
+    if (allDay) {
+      if (end) return start.toLocaleDateString(undefined, optionsDate) + ' – ' + end.toLocaleDateString(undefined, optionsDate);
+      return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
+    }
+
+    let text = start.toLocaleDateString(undefined, optionsDate) + ' ' + start.toLocaleTimeString(undefined, optionsTime);
+    if (end) text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
+    return text;
+  }
+
+  // --- Timeline render ---
+  const statusEl = document.getElementById('status');
+  const container = document.getElementById('timeline');
+
+  const groups = new vis.DataSet([{ id: 'WP1', content: 'WP1' }]);
+  const items = new vis.DataSet();
+  const timeline = new vis.Timeline(container, items, groups, {
+    stack: true,
+    horizontalScroll: true,
+    zoomKey: 'ctrlKey',
+    orientation: { axis: 'top' }
+  });
+
+  // Controls
+  document.getElementById('zoomInBtn').addEventListener('click', () => {
+    const range = timeline.getWindow();
+    const interval = range.end - range.start;
+    timeline.setWindow({
+      start: new Date(range.start.valueOf() + interval * 0.2),
+      end: new Date(range.end.valueOf() - interval * 0.2)
+    });
+  });
+  document.getElementById('zoomOutBtn').addEventListener('click', () => {
+    const range = timeline.getWindow();
+    const interval = range.end - range.start;
+    timeline.setWindow({
+      start: new Date(range.start.valueOf() - interval * 0.25),
+      end: new Date(range.end.valueOf() + interval * 0.25)
+    });
+  });
+  document.getElementById('fitBtn').addEventListener('click', () => timeline.fit());
+  document.getElementById('yearBtn').addEventListener('click', () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    timeline.setWindow(new Date(y, 0, 1), new Date(y, 11, 31, 23, 59, 59));
+  });
+
+  // Modal elements
+  const modalBackdrop = document.getElementById('eventModalBackdrop');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalWhen = document.getElementById('modalWhen');
+  const modalLocation = document.getElementById('modalLocation');
+  const modalDescription = document.getElementById('modalDescription');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const modalOkBtn = document.getElementById('modalOkBtn');
+
+  function closeModal() { modalBackdrop.classList.remove('show'); }
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalOkBtn.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+
+  // Click item => modal
+  timeline.on('select', function(props) {
+    if (!props.items || props.items.length === 0) return;
+    const id = props.items[0];
+    const item = items.get(id);
+    if (!item) return;
+
+    modalTitle.textContent = item.title || item.content || '(no title)';
+    modalWhen.textContent = formatDateRange(item.start, item.end, item.allDay);
+    modalLocation.textContent = item.location || 'Not specified';
+    modalDescription.textContent = item.description || 'No description provided.';
+    modalBackdrop.classList.add('show');
+  });
+
+  async function loadTimeline() {
+    statusEl.textContent = 'Loading WP1 timeline from ICS…';
+    try {
+      const resp = await fetch(ICS_URL);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+      const text = await resp.text();
+      const evs = parseICS(text);
+
+      let i = 0;
+      for (const ev of evs) {
+        const hasEnd = !!ev.end;
+        items.add({
+          id: 'wp1-' + (i++),
+          group: 'WP1',
+          content: ev.title,
+          title: ev.title,
+          start: ev.start,
+          end: hasEnd ? ev.end : undefined,
+          type: hasEnd ? 'range' : 'point',
+          allDay: ev.allDay,
+          description: ev.description,
+          location: ev.location
+        });
+      }
+
+      statusEl.textContent = 'WP1 timeline loaded (' + evs.length + ' items).';
+      if (evs.length > 0) timeline.fit();
+    } catch (e) {
+      console.error('Timeline load failed:', e);
+      statusEl.textContent = 'Could not load WP1 timeline – please check the ICS URL or CORS settings.';
+      statusEl.classList.add('error');
+    }
+  }
+
+  loadTimeline();
+</script>
+</body>
+</html>
