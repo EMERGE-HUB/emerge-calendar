@@ -23,24 +23,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 1.3rem;
-    }
-
-    header p {
-      margin: 4px 0 0;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    header {
-      background: #004f9f;
-      color: #fff;
-      padding: 16px 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
     .header-container {
       display: flex;
       align-items: center;
@@ -51,7 +33,7 @@
       background: #ffffff;
       padding: 6px;
       border-radius: 6px;
-      height: 60px;           /* adjust size to taste */
+      height: 60px; /* adjust size to taste */
     }
 
     .header-text h1 {
@@ -62,6 +44,7 @@
     .header-text p {
       margin: 4px 0 0;
       font-size: 0.9rem;
+      opacity: 0.9;
     }
 
     main {
@@ -181,16 +164,32 @@
       color: #004f9f;
       text-decoration: none;
       font-weight: 600;
+      padding-bottom: 2px;
+      border-bottom: 2px solid transparent;
     }
 
     .wp-nav a:hover {
       text-decoration: underline;
     }
 
+    /* Active-link highlighting (nav bar) */
+    .wp-nav a.active {
+      border-bottom-color: #004f9f;
+      text-decoration: none;
+    }
+
     .wp-nav .divider {
       color: #666;
       margin: 0 6px;
       font-weight: 600;
+    }
+
+    /* Make custom timeline link look like FullCalendar buttons */
+    .fc .fc-toolbar .fc-button.fc-timeline-link {
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
     }
 
     /* ========= CATEGORY COLOURING FOR EVENTS =========
@@ -262,12 +261,13 @@
     }
 
     @media (max-width: 600px) {
-      header h1 {
+      .header-text h1 {
         font-size: 1.1rem;
       }
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -300,6 +300,10 @@
   <a href="meetings.html">Meetings Calendar</a>
   <a href="meetings-events.html">Meetings &amp; Events</a>
   <a href="all.html">All Calendar</a>
+
+  <span class="divider">|</span>
+
+  <a href="timeline-WP1.html">WP1 Timeline</a>
 </nav>
 
 <main>
@@ -327,11 +331,8 @@
 </div>
 
 <script>
-  // 👉 SET THIS to your real WP1 ICS URL (R2 or Worker)
+  // WP1 ICS URL (confirmed by you)
   const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/wp1.ics';
-
-  // 👉 SET THIS to your FullCalendar Premium licence key
-  // const FULLCAL_LICENSE_KEY = 'CC-Attribution-NonCommercial-NoDerivatives';
 
   // Very small iCalendar (ICS) parser -> FullCalendar events
   function parseICS(icsText) {
@@ -462,6 +463,13 @@
     const calendarEl = document.getElementById('calendar');
     const statusEl = document.getElementById('status');
 
+    // Active-link highlighting (nav bar)
+    const page = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    document.querySelectorAll('.wp-nav a').forEach(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      if (href === page) a.classList.add('active');
+    });
+
     // Modal elements
     const modalBackdrop = document.getElementById('eventModalBackdrop');
     const modalTitle = document.getElementById('modalTitle');
@@ -478,40 +486,46 @@
     modalCloseBtn.addEventListener('click', closeModal);
     modalOkBtn.addEventListener('click', closeModal);
     modalBackdrop.addEventListener('click', function(e) {
-      if (e.target === modalBackdrop) {
-        closeModal();
-      }
+      if (e.target === modalBackdrop) closeModal();
     });
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      //licenseKey: FULLCAL_LICENSE_KEY,  // Premium licence key
       initialView: 'listYear',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineYear'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear'
       },
       views: {
-        listYear: {
-          buttonText: 'Year list'
-        },
-        multiMonthYear: {
-          buttonText: 'Year grid'
-        },
-        timelineYear: {
-          buttonText: 'Year timeline'
-        }
+        listYear: { buttonText: 'Year list' },
+        multiMonthYear: { buttonText: 'Year grid' }
       },
 
-      // 🔹 Add a CSS class based on the [Label] in the event title
+      // Add a CSS class based on the [Label] in the event title
       eventClassNames: function(info) {
         const title = info.event.title || '';
-        // Match [Label] at the start of the title
         const match = title.match(/^\[(.*?)\]/);
         if (!match) return [];
-        const label = match[1].trim();         // e.g. Deliverable, Milestone, Meeting, Task, Event, Project Task, Other
-        const safe = label.toLowerCase().replace(/\s+/g, '-'); // e.g. deliverable, project-task
+        const label = match[1].trim();
+        const safe = label.toLowerCase().replace(/\s+/g, '-');
         return [ 'cat-' + safe ];
+      },
+
+      // Inject a "Timeline" button into the FullCalendar header (styled like native buttons)
+      viewDidMount: function() {
+        const toolbarRight = calendarEl.querySelector('.fc-toolbar-chunk:last-child');
+        if (!toolbarRight) return;
+
+        // Avoid duplicates on re-render
+        if (toolbarRight.querySelector('.fc-timeline-link')) return;
+
+        const a = document.createElement('a');
+        a.href = 'timeline-WP1.html';
+        a.className = 'fc-button fc-button-primary fc-timeline-link';
+        a.textContent = 'Timeline';
+        a.title = 'Open WP1 timeline view';
+
+        toolbarRight.appendChild(a);
       },
 
       eventClick: function(info) {
@@ -535,9 +549,7 @@
 
     fetch(ICS_URL)
       .then(function(response) {
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status);
-        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
       })
       .then(function(text) {
@@ -555,6 +567,7 @@
 
 </body>
 </html>
+
 
 
 
