@@ -193,33 +193,6 @@
       color: #ffffff !important;
     }
 
-    /* Prevent events "disappearing" on hover (opacity/colour changes) */
-.fc .fc-event,
-.fc .fc-event a {
-  opacity: 1 !important;
-}
-
-.fc .fc-event:hover,
-.fc .fc-event:hover a {
-  opacity: 1 !important;
-}
-
-/* Keep event text readable and stable (especially list view links) */
-.fc .fc-event a {
-  color: inherit !important;
-  text-decoration: none;
-}
-
-.fc .fc-event a:hover {
-  color: inherit !important;
-  text-decoration: underline;
-}
-
-/* FullCalendar list view: stop row hover from overriding our event colours */
-.fc .fc-list-event:hover td {
-  background: inherit !important;
-}
-
 
     /* ========= HOLIDAYS ========= */
     .fc-event.cat-holiday,
@@ -235,6 +208,17 @@
     .fc-list-event.cat-holiday .fc-list-event-title a::before {
       content: "🏛 ";
     }
+/* List view uses table cells; keep holiday row colour on hover */
+.fc .fc-list-event.cat-holiday td,
+.fc .fc-list-event.cat-holiday:hover td {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+.fc .fc-list-event.cat-holiday .fc-list-event-title a,
+.fc .fc-list-event.cat-holiday:hover .fc-list-event-title a {
+  color: #ffffff !important;
+}
 
     /* Modal */
     .modal-backdrop {
