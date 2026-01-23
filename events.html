@@ -4,13 +4,12 @@
   <meta charset="utf-8" />
   <title>EMERGE – Events Calendar</title>
 
-  <!-- FullCalendar Premium (Scheduler) bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.19/index.global.min.js"></script>
+  <!-- FullCalendar (non-premium) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
 
   <style>
     body {
       margin: 0;
-      padding: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f5f7fb;
       color: #222;
@@ -30,7 +29,7 @@
     }
 
     .header-logo {
-      background: #ffffff;
+      background: #fff;
       padding: 6px;
       border-radius: 6px;
       height: 60px;
@@ -44,110 +43,11 @@
     .header-text p {
       margin: 4px 0 0;
       font-size: 0.9rem;
-    }
-
-    main {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: 0 12px 40px;
-    }
-
-    #status {
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    #status.error {
-      color: #b00020;
-    }
-
-    #calendar {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    /* Simple modal for event details */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-      z-index: 9999;
-    }
-
-    .modal-backdrop.show {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .modal {
-      background: #fff;
-      border-radius: 10px;
-      max-width: 520px;
-      width: 92%;
-      padding: 20px 22px 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .modal-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      font-size: 1.2rem;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .modal-body p {
-      margin: 4px 0;
-      font-size: 0.9rem;
-    }
-
-    .modal-body p span.label {
-      font-weight: 600;
-    }
-
-    .modal-footer {
-      margin-top: 12px;
-      text-align: right;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #f3f4f6;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .btn:hover {
-      background: #e5e7eb;
+      opacity: 0.95;
     }
 
     .wp-nav {
-      background: #ffffff;
+      background: #fff;
       padding: 10px 20px;
       margin: 0 auto 20px;
       display: flex;
@@ -167,27 +67,117 @@
       border-bottom: 2px solid transparent;
     }
 
-    .wp-nav a:hover {
-      text-decoration: underline;
-    }
-
     .wp-nav a.active {
       border-bottom-color: #004f9f;
     }
 
-    .wp-nav .divider {
-      color: #666;
-      margin: 0 6px;
-      font-weight: 600;
+    main {
+      max-width: none;
+      padding: 0 16px 40px;
     }
 
-    @media (max-width: 600px) {
-      .header-text h1 {
-        font-size: 1.1rem;
-      }
+    #status {
+      margin: 10px 0;
+      font-size: 0.9rem;
+      color: #555;
     }
+    #status.error { color: #b00020; }
+
+    .controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    .legend {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+    }
+
+    .legend-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin: 0 0 8px 0;
+      color: #222;
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px 12px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.15);
+      flex: 0 0 auto;
+    }
+
+    .legend-item input {
+      transform: translateY(1px);
+    }
+
+    #calendar {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    /* === Holiday styling (distinct) === */
+    .fc-event.cat-holiday,
+    .fc-daygrid-event.cat-holiday,
+    .fc-list-event.cat-holiday {
+      background-color: #374151 !important;
+      border-color: #374151 !important;
+      color: #ffffff !important;
+    }
+    .fc-daygrid-event.cat-holiday .fc-event-title::before,
+    .fc-timegrid-event.cat-holiday .fc-event-title::before,
+    .fc-list-event.cat-holiday .fc-list-event-title a::before {
+      content: "🏛 ";
+    }
+
+    /* === WP colouring ===
+       We colour by WP-specific classNames we attach per source:
+       src-wp1 ... src-wp9
+    */
+    .fc-event.src-wp1, .fc-daygrid-event.src-wp1, .fc-list-event.src-wp1 { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; color:#fff !important; }
+    .fc-event.src-wp2, .fc-daygrid-event.src-wp2, .fc-list-event.src-wp2 { background-color: #047857 !important; border-color: #047857 !important; color:#fff !important; }
+    .fc-event.src-wp3, .fc-daygrid-event.src-wp3, .fc-list-event.src-wp3 { background-color: #7c3aed !important; border-color: #7c3aed !important; color:#fff !important; }
+    .fc-event.src-wp4, .fc-daygrid-event.src-wp4, .fc-list-event.src-wp4 { background-color: #b45309 !important; border-color: #b45309 !important; color:#fff !important; }
+    .fc-event.src-wp5, .fc-daygrid-event.src-wp5, .fc-list-event.src-wp5 { background-color: #be123c !important; border-color: #be123c !important; color:#fff !important; }
+    .fc-event.src-wp6, .fc-daygrid-event.src-wp6, .fc-list-event.src-wp6 { background-color: #0ea5e9 !important; border-color: #0ea5e9 !important; color:#fff !important; }
+    .fc-event.src-wp7, .fc-daygrid-event.src-wp7, .fc-list-event.src-wp7 { background-color: #4b5563 !important; border-color: #4b5563 !important; color:#fff !important; }
+    .fc-event.src-wp8, .fc-daygrid-event.src-wp8, .fc-list-event.src-wp8 { background-color: #16a34a !important; border-color: #16a34a !important; color:#fff !important; }
+    .fc-event.src-wp9, .fc-daygrid-event.src-wp9, .fc-list-event.src-wp9 { background-color: #9333ea !important; border-color: #9333ea !important; color:#fff !important; }
+
+    /* Keep event text readable in list view */
+    .fc-list-event-title a { text-decoration: none; }
+
   </style>
 </head>
+
 <body>
 
 <header>
@@ -195,10 +185,9 @@
     <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
          alt="EMERGE Logo"
          class="header-logo" />
-
     <div class="header-text">
       <h1>EMERGE – Events Calendar</h1>
-      <p>Key meetings and milestones for Events across EMERGE</p>
+      <p>All Work Package events plus partner holidays</p>
     </div>
   </div>
 </header>
@@ -213,252 +202,259 @@
   <a href="WP7.html">WP7</a>
   <a href="WP8.html">WP8</a>
   <a href="WP9.html">WP9</a>
-
-  <span class="divider">|</span>
-
-  <a href="events.html">Events Calendar</a>
-  <a href="meetings.html">Meetings Calendar</a>
-  <a href="meetings-events.html">Meetings &amp; Events</a>
-  <a href="all.html">All Calendar</a>
+  <span>|</span>
+  <a href="events.html" class="active">Events</a>
 </nav>
 
 <main>
-  <div id="status">Loading Events calendar…</div>
+  <div id="status">Loading calendars…</div>
+
+  <div class="controls">
+    <label>
+      <input type="checkbox" id="toggleHolidays" checked>
+      Show holidays
+    </label>
+  </div>
+
+  <div class="legend" id="legend">
+    <p class="legend-title">Work Packages (toggle)</p>
+    <div class="legend-grid" id="legendGrid"></div>
+  </div>
+
   <div id="calendar"></div>
 </main>
 
-<!-- Event detail modal -->
-<div id="eventModalBackdrop" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalTitle"></h2>
-      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <p><span class="label">When:</span> <span id="modalWhen"></span></p>
-      <p><span class="label">Location:</span> <span id="modalLocation"></span></p>
-      <p><span class="label">Description:</span></p>
-      <p id="modalDescription"></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" id="modalOkBtn">Close</button>
-    </div>
-  </div>
-</div>
-
 <script>
-  const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/events.ics';
-  const FULLCAL_LICENSE_KEY = 'CC-Attribution-NonCommercial-NoDerivatives';
+  const R2_BASE = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev';
+  const HOLIDAYS_ICS_URL = `${R2_BASE}/holidays.ics`;
 
-  function parseICS(icsText) {
-    const rawLines = icsText.split(/\r?\n/);
-    const lines = [];
-    for (let i = 0; i < rawLines.length; i++) {
-      const line = rawLines[i];
-      if (!line) continue;
-      if (line.startsWith(' ') || line.startsWith('\t')) {
-        if (lines.length > 0) {
-          lines[lines.length - 1] += line.slice(1);
-        }
-      } else {
-        lines.push(line);
-      }
+  // WP definitions: id, label, URL, className, swatch colour (must match CSS colours)
+  const WP_DEFS = [
+    { id: 'wp1', label: 'WP1', url: `${R2_BASE}/wp1.ics`, className: 'src-wp1', color: '#1d4ed8' },
+    { id: 'wp2', label: 'WP2', url: `${R2_BASE}/wp2.ics`, className: 'src-wp2', color: '#047857' },
+    { id: 'wp3', label: 'WP3', url: `${R2_BASE}/wp3.ics`, className: 'src-wp3', color: '#7c3aed' },
+    { id: 'wp4', label: 'WP4', url: `${R2_BASE}/wp4.ics`, className: 'src-wp4', color: '#b45309' },
+    { id: 'wp5', label: 'WP5', url: `${R2_BASE}/wp5.ics`, className: 'src-wp5', color: '#be123c' },
+    { id: 'wp6', label: 'WP6', url: `${R2_BASE}/wp6.ics`, className: 'src-wp6', color: '#0ea5e9' },
+    { id: 'wp7', label: 'WP7', url: `${R2_BASE}/wp7.ics`, className: 'src-wp7', color: '#4b5563' },
+    { id: 'wp8', label: 'WP8', url: `${R2_BASE}/wp8.ics`, className: 'src-wp8', color: '#16a34a' },
+    { id: 'wp9', label: 'WP9', url: `${R2_BASE}/wp9.ics`, className: 'src-wp9', color: '#9333ea' },
+  ];
+
+  const statusEl = document.getElementById('status');
+
+  function setError(msg) {
+    statusEl.textContent = msg;
+    statusEl.classList.add('error');
+  }
+
+  // Minimal ICS parser (same approach as your other pages)
+  function parseICS(text) {
+    const lines = text.split(/\r?\n/);
+    const events = [];
+    let cur = null;
+
+    for (const l of lines) {
+      if (l === 'BEGIN:VEVENT') { cur = {}; continue; }
+      if (l === 'END:VEVENT') { if (cur) events.push(cur); cur = null; continue; }
+      if (!cur) continue;
+
+      const idx = l.indexOf(':');
+      if (idx === -1) continue;
+
+      const key = l.slice(0, idx).split(';')[0];
+      const val = l.slice(idx + 1);
+
+      if (key === 'SUMMARY') cur.title = val;
+      if (key === 'DESCRIPTION') cur.description = val.replace(/\\n/g, '\n');
+      if (key === 'LOCATION') cur.location = val;
+      if (key === 'DTSTART') cur.start = val;
+      if (key === 'DTEND') cur.end = val;
     }
 
-    const vevents = [];
-    let current = null;
-
-    for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) {
-        current = {};
-        continue;
-      }
-      if (line.startsWith('END:VEVENT')) {
-        if (current) vevents.push(current);
-        current = null;
-        continue;
-      }
-      if (!current) continue;
-
-      const parts = line.split(':');
-      if (parts.length < 2) continue;
-      const value = parts.slice(1).join(':');
-      const keyWithParams = parts[0];
-      const key = keyWithParams.split(';')[0].toUpperCase();
-
-      switch (key) {
-        case 'SUMMARY':
-          current.summary = value;
-          break;
-        case 'DESCRIPTION':
-          current.description = value.replace(/\\n/g, '\n');
-          break;
-        case 'LOCATION':
-          current.location = value;
-          break;
-        case 'DTSTART':
-          current.dtstart = value;
-          break;
-        case 'DTEND':
-          current.dtend = value;
-          break;
-        default:
-          break;
-      }
-    }
-
-    function parseICSTime(v) {
+    function parseTime(v) {
       if (!v) return null;
+      // all-day (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
         const m = parseInt(v.slice(4,6), 10) - 1;
         const d = parseInt(v.slice(6,8), 10);
-        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+        return { date: new Date(y, m, d), allDay: true };
       }
+      // naive datetime support (YYYYMMDDTHHMM...)
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
       const hh = parseInt(v.slice(9,11) || '0', 10);
       const mm = parseInt(v.slice(11,13) || '0', 10);
       const ss = parseInt(v.slice(13,15) || '0', 10);
+
+      // 'Z' handling (UTC)
       if (v.endsWith('Z')) {
         return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
-      } else {
-        return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
       }
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
     }
 
-    const events = vevents.map(ev => {
-      const startParsed = parseICSTime(ev.dtstart);
-      const endParsed = parseICSTime(ev.dtend);
-      const allDay = startParsed ? startParsed.allDay : false;
+    return events.map(e => {
+      const s = parseTime(e.start);
+      const en = parseTime(e.end);
 
       return {
-        title: ev.summary || '(no title)',
-        start: startParsed ? startParsed.date : null,
-        end: endParsed ? endParsed.date : null,
-        allDay: allDay,
+        title: e.title || '(no title)',
+        start: s?.date,
+        end: en?.date,
+        allDay: s?.allDay,
         extendedProps: {
-          description: ev.description || '',
-          location: ev.location || ''
+          description: e.description || '',
+          location: e.location || ''
         }
       };
-    });
-
-    return events.filter(e => e.start);
+    }).filter(e => e.start);
   }
 
-  function formatDateRange(start, end, allDay) {
-    if (!start) return 'Unknown';
-    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit' };
-
-    if (allDay) {
-      if (end) {
-        return start.toLocaleDateString(undefined, optionsDate) +
-               ' – ' +
-               end.toLocaleDateString(undefined, optionsDate);
-      }
-      return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
-    } else {
-      let text = start.toLocaleDateString(undefined, optionsDate) +
-                 ' ' +
-                 start.toLocaleTimeString(undefined, optionsTime);
-      if (end) {
-        text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
-      }
-      return text;
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+    initialView: 'listYear',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear'
     }
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
-    const statusEl = document.getElementById('status');
-
-    const modalBackdrop = document.getElementById('eventModalBackdrop');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalWhen = document.getElementById('modalWhen');
-    const modalLocation = document.getElementById('modalLocation');
-    const modalDescription = document.getElementById('modalDescription');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const modalOkBtn = document.getElementById('modalOkBtn');
-
-    function closeModal() {
-      modalBackdrop.classList.remove('show');
-    }
-
-    modalCloseBtn.addEventListener('click', closeModal);
-    modalOkBtn.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', function(e) {
-      if (e.target === modalBackdrop) {
-        closeModal();
-      }
-    });
-
-    // highlight active nav link
-    const path = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.wp-nav a').forEach(a => {
-      const href = a.getAttribute('href');
-      if (href === path) {
-        a.classList.add('active');
-      }
-    });
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      licenseKey: FULLCAL_LICENSE_KEY,
-      initialView: 'listYear',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineYear'
-      },
-      views: {
-        listYear: {
-          buttonText: 'Year list'
-        },
-        multiMonthYear: {
-          buttonText: 'Year grid'
-        },
-        timelineYear: {
-          buttonText: 'Year timeline'
-        }
-      },
-      eventClick: function(info) {
-        const desc = info.event.extendedProps.description || 'No description provided.';
-        const loc = info.event.extendedProps.location || 'Not specified';
-        const when = formatDateRange(info.event.start, info.event.end, info.event.allDay);
-
-        modalTitle.textContent = info.event.title;
-        modalWhen.textContent = when;
-        modalLocation.textContent = loc;
-        modalDescription.textContent = desc;
-
-        modalBackdrop.classList.add('show');
-      }
-    });
-
-    calendar.render();
-
-    statusEl.textContent = 'Loading Events calendar…';
-
-    fetch(ICS_URL)
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status);
-        }
-        return response.text();
-      })
-      .then(function(text) {
-        const events = parseICS(text);
-        calendar.addEventSource(events);
-        statusEl.textContent = 'Events calendar loaded (' + events.length + ' events).';
-      })
-      .catch(function(err) {
-        console.error('Error loading ICS:', err);
-        statusEl.textContent = 'Could not load Events calendar – please check the ICS URL or CORS settings.';
-        statusEl.classList.add('error');
-      });
   });
+
+  calendar.render();
+
+  // --- Event source refs (for toggling) ---
+  const wpSourcesById = new Map();     // id -> source object
+  let holidaysSource = null;
+
+  async function loadICS(url, className) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+    const events = parseICS(await r.text());
+    events.forEach(e => e.classNames = (e.classNames || []).concat([className]));
+    return events;
+  }
+
+  function addWpSource(def, events) {
+    const src = { id: def.id, events };
+    wpSourcesById.set(def.id, src);
+    calendar.addEventSource(src);
+  }
+
+  function removeWpSource(defId) {
+    const src = calendar.getEventSourceById(defId);
+    if (src) src.remove();
+  }
+
+  function buildLegend() {
+    const legendGrid = document.getElementById('legendGrid');
+
+    for (const def of WP_DEFS) {
+      const row = document.createElement('label');
+      row.className = 'legend-item';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = true;
+      cb.dataset.wpId = def.id;
+
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = def.color;
+
+      const txt = document.createElement('span');
+      txt.textContent = def.label;
+
+      row.appendChild(cb);
+      row.appendChild(sw);
+      row.appendChild(txt);
+      legendGrid.appendChild(row);
+
+      cb.addEventListener('change', (e) => {
+        const id = e.target.dataset.wpId;
+        if (e.target.checked) {
+          // Re-add from cached events
+          const cached = wpSourcesById.get(id);
+          if (cached) {
+            // only add if not already present
+            const existing = calendar.getEventSourceById(id);
+            if (!existing) calendar.addEventSource(cached);
+          } else {
+            // If not loaded/cached (e.g., previously failed), try load now
+            const def = WP_DEFS.find(x => x.id === id);
+            if (!def) return;
+            statusEl.textContent = `Loading ${def.label}…`;
+            loadICS(def.url, def.className).then(events => {
+              addWpSource(def, events);
+              statusEl.textContent = `${def.label} loaded (${events.length} events).`;
+            }).catch(err => {
+              console.error(err);
+              setError(`Failed to load ${def.label}.`);
+              e.target.checked = false;
+            });
+          }
+        } else {
+          removeWpSource(id);
+        }
+      });
+    }
+  }
+
+  buildLegend();
+
+  async function loadAll() {
+    statusEl.classList.remove('error');
+    statusEl.textContent = 'Loading WP events and holidays…';
+
+    let totalWpEvents = 0;
+    const wpFailures = [];
+
+    const wpLoads = await Promise.allSettled(
+      WP_DEFS.map(def => loadICS(def.url, def.className))
+    );
+
+    wpLoads.forEach((res, idx) => {
+      const def = WP_DEFS[idx];
+      if (res.status === 'fulfilled') {
+        addWpSource(def, res.value);
+        totalWpEvents += res.value.length;
+      } else {
+        wpFailures.push(def.label);
+        console.error(`Failed to load ${def.label}`, res.reason);
+        // Reflect failure in legend checkbox
+        const cb = document.querySelector(`input[type="checkbox"][data-wp-id="${def.id}"]`);
+        if (cb) cb.checked = false;
+      }
+    });
+
+    // Holidays
+    try {
+      const holEvents = await loadICS(HOLIDAYS_ICS_URL, 'cat-holiday');
+      holidaysSource = { id: 'holidays', events: holEvents };
+      calendar.addEventSource(holidaysSource);
+
+      statusEl.textContent =
+        `Loaded ${totalWpEvents} WP events + ${holEvents.length} holidays` +
+        (wpFailures.length ? ` (failed: ${wpFailures.join(', ')})` : '');
+    } catch (e) {
+      console.error('Failed to load holidays', e);
+      setError(`Loaded ${totalWpEvents} WP events but could not load holidays.`);
+      document.getElementById('toggleHolidays').checked = false;
+    }
+  }
+
+  // Holidays toggle
+  document.getElementById('toggleHolidays').addEventListener('change', e => {
+    const src = calendar.getEventSourceById('holidays');
+    if (e.target.checked) {
+      if (!src && holidaysSource) calendar.addEventSource(holidaysSource);
+    } else {
+      if (src) src.remove();
+    }
+  });
+
+  loadAll();
 </script>
 
 </body>
