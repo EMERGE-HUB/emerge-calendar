@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <title>EMERGE – WP1 Calendar</title>
 
-  <!-- FullCalendar Premium (Scheduler) bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.19/index.global.min.js"></script>
+  <!-- FullCalendar Non-Premium -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
 
   <style>
     body {
@@ -44,6 +44,7 @@
     .header-text p {
       margin: 4px 0 0;
       font-size: 0.9rem;
+      opacity: 0.95;
     }
 
     main {
@@ -62,6 +63,33 @@
       color: #b00020;
     }
 
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin: 8px 0 12px;
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: #222;
+    }
+
+    .btn:hover {
+      background: #e5e7eb;
+    }
+
     #calendar {
       background: #fff;
       border-radius: 8px;
@@ -69,7 +97,118 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
-    /* Simple modal for event details */
+    .wp-nav {
+      background: #ffffff;
+      padding: 10px 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+    }
+
+    .wp-nav a {
+      color: #004f9f;
+      text-decoration: none;
+      font-weight: 600;
+      padding-bottom: 2px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .wp-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .wp-nav a.active {
+      border-bottom-color: #004f9f;
+      text-decoration: none;
+    }
+
+    .wp-nav .divider {
+      color: #666;
+      margin: 0 6px;
+      font-weight: 600;
+    }
+
+    /* ========= CATEGORY COLOURING =========
+       Depends on [Label] prefix in SUMMARY, e.g. [Deliverable] Title
+    */
+
+    .fc-event.cat-deliverable,
+    .fc-daygrid-event.cat-deliverable,
+    .fc-list-event.cat-deliverable {
+      background-color: #009688 !important;
+      border-color: #009688 !important;
+      color: #ffffff !important;
+    }
+
+    .fc-event.cat-milestone,
+    .fc-daygrid-event.cat-milestone,
+    .fc-list-event.cat-milestone {
+      background-color: #ffb300 !important;
+      border-color: #ffb300 !important;
+      color: #000000 !important;
+    }
+
+    .fc-event.cat-meeting,
+    .fc-daygrid-event.cat-meeting,
+    .fc-list-event.cat-meeting {
+      background-color: #2e7d32 !important;
+      border-color: #2e7d32 !important;
+      color: #ffffff !important;
+    }
+
+    .fc-event.cat-task,
+    .fc-daygrid-event.cat-task,
+    .fc-list-event.cat-task {
+      background-color: #6a1b9a !important;
+      border-color: #6a1b9a !important;
+      color: #ffffff !important;
+    }
+
+    .fc-event.cat-event,
+    .fc-daygrid-event.cat-event,
+    .fc-list-event.cat-event {
+      background-color: #c62828 !important;
+      border-color: #c62828 !important;
+      color: #ffffff !important;
+    }
+
+    .fc-event.cat-project-task,
+    .fc-daygrid-event.cat-project-task,
+    .fc-list-event.cat-project-task {
+      background-color: #ef6c00 !important;
+      border-color: #ef6c00 !important;
+      color: #ffffff !important;
+    }
+
+    .fc-event.cat-other,
+    .fc-daygrid-event.cat-other,
+    .fc-list-event.cat-other {
+      background-color: #607d8b !important;
+      border-color: #607d8b !important;
+      color: #ffffff !important;
+    }
+
+    /* ========= HOLIDAYS ========= */
+    .fc-event.cat-holiday,
+    .fc-daygrid-event.cat-holiday,
+    .fc-list-event.cat-holiday {
+      background-color: #374151 !important;
+      border-color: #374151 !important;
+      color: #ffffff !important;
+    }
+
+    .fc-daygrid-event.cat-holiday .fc-event-title::before,
+    .fc-timegrid-event.cat-holiday .fc-event-title::before,
+    .fc-list-event.cat-holiday .fc-list-event-title a::before {
+      content: "🏛 ";
+    }
+
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -132,62 +271,12 @@
       text-align: right;
     }
 
-    .btn {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #f3f4f6;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .btn:hover {
-      background: #e5e7eb;
-    }
-
-    .wp-nav {
-      background: #ffffff;
-      padding: 10px 20px;
-      margin: 0 auto 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      border-radius: 6px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-      font-size: 0.9rem;
-    }
-
-    .wp-nav a {
-      color: #004f9f;
-      text-decoration: none;
-      font-weight: 600;
-      padding-bottom: 2px;
-      border-bottom: 2px solid transparent;
-    }
-
-    .wp-nav a:hover {
-      text-decoration: underline;
-    }
-
-    .wp-nav a.active {
-      border-bottom-color: #004f9f;
-    }
-
-    .wp-nav .divider {
-      color: #666;
-      margin: 0 6px;
-      font-weight: 600;
-    }
-
     @media (max-width: 600px) {
-      .header-text h1 {
-        font-size: 1.1rem;
-      }
+      .header-text h1 { font-size: 1.1rem; }
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -198,7 +287,7 @@
 
     <div class="header-text">
       <h1>EMERGE – WP1 Calendar</h1>
-      <p>Key meetings and milestones for Work Package WP1</p>
+      <p>Key activities for Work Package 1</p>
     </div>
   </div>
 </header>
@@ -216,14 +305,24 @@
 
   <span class="divider">|</span>
 
-  <a href="events.html">Events Calendar</a>
-  <a href="meetings.html">Meetings Calendar</a>
+  <a href="events.html">Events</a>
+  <a href="meetings.html">Meetings</a>
   <a href="meetings-events.html">Meetings &amp; Events</a>
-  <a href="all.html">All Calendar</a>
+  <a href="all.html">All</a>
 </nav>
 
 <main>
   <div id="status">Loading WP1 calendar…</div>
+
+  <div class="controls">
+    <label>
+      <input type="checkbox" id="toggleHolidays" checked>
+      Show holidays
+    </label>
+
+    <a class="btn" href="timeline-WP1.html">Timeline view</a>
+  </div>
+
   <div id="calendar"></div>
 </main>
 
@@ -247,19 +346,29 @@
 </div>
 
 <script>
-  const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/WP1.ics';
-  const FULLCAL_LICENSE_KEY = 'CC-Attribution-NonCommercial-NoDerivatives';
+  const R2_BASE = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev';
+  const WP1_ICS_URL = `${R2_BASE}/wp1.ics`;
+  const HOLIDAYS_ICS_URL = `${R2_BASE}/holidays.ics`;
 
+  // Active link highlight in nav
+  (function markActiveNav() {
+    const path = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    document.querySelectorAll('.wp-nav a').forEach(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      if (href === path) a.classList.add('active');
+    });
+  })();
+
+  // Small iCalendar (ICS) parser -> FullCalendar events
   function parseICS(icsText) {
     const rawLines = icsText.split(/\r?\n/);
     const lines = [];
+    // Unfold lines (handle lines that start with space / tab)
     for (let i = 0; i < rawLines.length; i++) {
       const line = rawLines[i];
       if (!line) continue;
       if (line.startsWith(' ') || line.startsWith('\t')) {
-        if (lines.length > 0) {
-          lines[lines.length - 1] += line.slice(1);
-        }
+        if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
       } else {
         lines.push(line);
       }
@@ -269,15 +378,8 @@
     let current = null;
 
     for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) {
-        current = {};
-        continue;
-      }
-      if (line.startsWith('END:VEVENT')) {
-        if (current) vevents.push(current);
-        current = null;
-        continue;
-      }
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
+      if (line.startsWith('END:VEVENT')) { if (current) vevents.push(current); current = null; continue; }
       if (!current) continue;
 
       const parts = line.split(':');
@@ -286,46 +388,36 @@
       const keyWithParams = parts[0];
       const key = keyWithParams.split(';')[0].toUpperCase();
 
-      switch (key) {
-        case 'SUMMARY':
-          current.summary = value;
-          break;
-        case 'DESCRIPTION':
-          current.description = value.replace(/\\n/g, '\n');
-          break;
-        case 'LOCATION':
-          current.location = value;
-          break;
-        case 'DTSTART':
-          current.dtstart = value;
-          break;
-        case 'DTEND':
-          current.dtend = value;
-          break;
-        default:
-          break;
-      }
+      if (key === 'SUMMARY') current.summary = value;
+      if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
+      if (key === 'LOCATION') current.location = value;
+      if (key === 'DTSTART') current.dtstart = value;
+      if (key === 'DTEND') current.dtend = value;
     }
 
     function parseICSTime(v) {
       if (!v) return null;
+
+      // All-day date (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
         const m = parseInt(v.slice(4,6), 10) - 1;
         const d = parseInt(v.slice(6,8), 10);
-        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+        return { date: new Date(y, m, d), allDay: true };
       }
+
+      // Date-time, optionally with Z
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
       const hh = parseInt(v.slice(9,11) || '0', 10);
       const mm = parseInt(v.slice(11,13) || '0', 10);
       const ss = parseInt(v.slice(13,15) || '0', 10);
+
       if (v.endsWith('Z')) {
         return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
-      } else {
-        return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
       }
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
     }
 
     const events = vevents.map(ev => {
@@ -360,21 +452,30 @@
                end.toLocaleDateString(undefined, optionsDate);
       }
       return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
-    } else {
-      let text = start.toLocaleDateString(undefined, optionsDate) +
-                 ' ' +
-                 start.toLocaleTimeString(undefined, optionsTime);
-      if (end) {
-        text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
-      }
-      return text;
     }
+
+    let text = start.toLocaleDateString(undefined, optionsDate) +
+               ' ' +
+               start.toLocaleTimeString(undefined, optionsTime);
+
+    if (end) text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
+    return text;
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  async function loadICS(url, className) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' for ' + url);
+    const text = await resp.text();
+    const events = parseICS(text);
+    events.forEach(e => e.classNames = (e.classNames || []).concat([className]));
+    return events;
+  }
+
+  document.addEventListener('DOMContentLoaded', async function() {
     const calendarEl = document.getElementById('calendar');
     const statusEl = document.getElementById('status');
 
+    // Modal elements
     const modalBackdrop = document.getElementById('eventModalBackdrop');
     const modalTitle = document.getElementById('modalTitle');
     const modalWhen = document.getElementById('modalWhen');
@@ -383,46 +484,40 @@
     const modalCloseBtn = document.getElementById('modalCloseBtn');
     const modalOkBtn = document.getElementById('modalOkBtn');
 
-    function closeModal() {
-      modalBackdrop.classList.remove('show');
-    }
-
+    function closeModal() { modalBackdrop.classList.remove('show'); }
     modalCloseBtn.addEventListener('click', closeModal);
     modalOkBtn.addEventListener('click', closeModal);
     modalBackdrop.addEventListener('click', function(e) {
-      if (e.target === modalBackdrop) {
-        closeModal();
-      }
-    });
-
-    // highlight active nav link
-    const path = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.wp-nav a').forEach(a => {
-      const href = a.getAttribute('href');
-      if (href === path) {
-        a.classList.add('active');
-      }
+      if (e.target === modalBackdrop) closeModal();
     });
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      licenseKey: FULLCAL_LICENSE_KEY,
       initialView: 'listYear',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineYear'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear'
       },
       views: {
-        listYear: {
-          buttonText: 'Year list'
-        },
-        multiMonthYear: {
-          buttonText: 'Year grid'
-        },
-        timelineYear: {
-          buttonText: 'Year timeline'
-        }
+        listYear: { buttonText: 'Year list' },
+        multiMonthYear: { buttonText: 'Year grid' }
       },
+
+      // Add CSS class based on [Label] in the event title.
+      // If event already has cat-holiday, we leave it intact.
+      eventClassNames: function(info) {
+        const existing = info.event.classNames || [];
+        if (existing.includes('cat-holiday')) return [];
+
+        const title = info.event.title || '';
+        const match = title.match(/^\[(.*?)\]/);
+        if (!match) return [];
+
+        const label = match[1].trim();
+        const safe = label.toLowerCase().replace(/\s+/g, '-');
+        return [ 'cat-' + safe ];
+      },
+
       eventClick: function(info) {
         const desc = info.event.extendedProps.description || 'No description provided.';
         const loc = info.event.extendedProps.location || 'Not specified';
@@ -439,25 +534,36 @@
 
     calendar.render();
 
-    statusEl.textContent = 'Loading WP1 calendar…';
+    // Load WP1 + holidays
+    statusEl.classList.remove('error');
+    statusEl.textContent = 'Loading WP1 calendar and holidays…';
 
-    fetch(ICS_URL)
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status);
-        }
-        return response.text();
-      })
-      .then(function(text) {
-        const events = parseICS(text);
-        calendar.addEventSource(events);
-        statusEl.textContent = 'WP1 calendar loaded (' + events.length + ' events).';
-      })
-      .catch(function(err) {
-        console.error('Error loading ICS:', err);
-        statusEl.textContent = 'Could not load WP1 calendar – please check the ICS URL or CORS settings.';
-        statusEl.classList.add('error');
-      });
+    let holidaysSource = null;
+
+    try {
+      const wp1Events = await loadICS(WP1_ICS_URL, 'src-wp1');
+      calendar.addEventSource(wp1Events);
+
+      const holEvents = await loadICS(HOLIDAYS_ICS_URL, 'cat-holiday');
+      holidaysSource = { id: 'holidays', events: holEvents };
+      calendar.addEventSource(holidaysSource);
+
+      statusEl.textContent = `WP1 loaded (${wp1Events.length} items) + holidays (${holEvents.length}).`;
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = 'Could not load WP1 calendar – please check the ICS URL or CORS settings.';
+      statusEl.classList.add('error');
+    }
+
+    // Holidays toggle
+    document.getElementById('toggleHolidays').addEventListener('change', (e) => {
+      const src = calendar.getEventSourceById('holidays');
+      if (e.target.checked) {
+        if (!src && holidaysSource) calendar.addEventSource(holidaysSource);
+      } else {
+        if (src) src.remove();
+      }
+    });
   });
 </script>
 
