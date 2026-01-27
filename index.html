@@ -183,6 +183,18 @@
     }
     .fc .fc-list-event.src-holidays .fc-list-event-title a{ color:#0b3b33 !important; }
 
+    /* Ensure list view text remains readable on coloured rows (WP + holidays) */
+    .fc .fc-list-event { color: #ffffff; }
+    .fc .fc-list-event .fc-list-event-title a,
+    .fc .fc-list-event .fc-list-event-time { color: inherit !important; }
+    /* Override for light holiday colour */
+    .fc .fc-list-event.src-holidays { color: #0b3b33; }
+
+    /* Mint hover highlight without "disappearing" text */
+    .fc .fc-list-event td { transition: box-shadow 0.12s ease; }
+    .fc .fc-list-event:hover td { box-shadow: inset 0 0 0 9999px rgba(170,217,214,0.22); }
+
+
     @media (max-width:600px){
       .header-text h1{ font-size:1.1rem; }
     }
@@ -212,8 +224,6 @@
         <button class="btn" id="copyLinkBtn" type="button">Copy link</button>
       </div>
     </div>
-
-    <div class="legend" id="legend"></div>
   </div>
 
   <div id="calendar"></div>
@@ -387,24 +397,6 @@
   // ============================================================
   // UI: toggles + legend
   // ============================================================
-  function renderLegend() {
-    const legendEl = document.getElementById('legend');
-    legendEl.innerHTML = '';
-    for (const src of SOURCES) {
-      const it = document.createElement('div');
-      it.className = 'legend-item';
-
-      const sw = document.createElement('span');
-      sw.className = 'swatch';
-      sw.style.background = src.color;
-
-      const txt = document.createElement('span');
-      txt.textContent = src.label;
-
-      it.appendChild(sw);
-      it.appendChild(txt);
-      legendEl.appendChild(it);
-    }
   }
 
   function renderToggles(selected) {
@@ -446,7 +438,16 @@
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineBtn'
+      },
+      customButtons: {
+        timelineBtn: {
+          text: 'Timeline',
+          click: function() {
+            // WP1 timeline view (extend later for all-WP timelines)
+            window.location.href = 'timeline-WP1.html';
+          }
+        }
       },
       views: {
         listYear: { buttonText: 'Year list' },
@@ -454,8 +455,6 @@
       }
     });
     calendar.render();
-
-    renderLegend();
 
     const fromUrl = getSelectionFromUrl();
     const fromStorage = getSelectionFromStorage();
