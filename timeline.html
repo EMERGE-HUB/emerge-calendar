@@ -1,4 +1,4 @@
-<!-- timeline-WP1.html (nav cleaned: ONLY Timeline link kept) -->
+<!-- timeline.html (Back to index.html + pass toggle state so index can render the same) -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,18 +41,10 @@
       height: 60px;
     }
 
-    .header-text h1 {
-      margin: 0;
-      font-size: 1.3rem;
-    }
+    .header-text h1 { margin: 0; font-size: 1.3rem; }
+    .header-text p { margin: 4px 0 0; font-size: 0.9rem; opacity: 0.95; }
 
-    .header-text p {
-      margin: 4px 0 0;
-      font-size: 0.9rem;
-      opacity: 0.95;
-    }
-
-    /* Minimal nav: single link */
+    /* Minimal nav */
     .wp-nav {
       background: #ffffff;
       padding: 10px 20px;
@@ -73,10 +65,7 @@
       border-bottom: 2px solid transparent;
     }
     .wp-nav a:hover { text-decoration: underline; }
-    .wp-nav a.active {
-      border-bottom-color: #004f9f;
-      text-decoration: none;
-    }
+    .wp-nav a.active { border-bottom-color: #004f9f; }
 
     main {
       max-width: none;
@@ -182,10 +171,7 @@
       transition: opacity 0.2s ease, visibility 0.2s ease;
       z-index: 9999;
     }
-    .modal-backdrop.show {
-      visibility: visible;
-      opacity: 1;
-    }
+    .modal-backdrop.show { visibility: visible; opacity: 1; }
     .modal {
       background: #fff;
       border-radius: 10px;
@@ -200,27 +186,11 @@
       align-items: center;
       margin-bottom: 8px;
     }
-    .modal-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin: 0;
-    }
-    .modal-close {
-      border: none;
-      background: transparent;
-      font-size: 1.2rem;
-      cursor: pointer;
-      line-height: 1;
-    }
-    .modal-body p {
-      margin: 4px 0;
-      font-size: 0.9rem;
-    }
+    .modal-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
+    .modal-close { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; line-height: 1; }
+    .modal-body p { margin: 4px 0; font-size: 0.9rem; }
     .modal-body p span.label { font-weight: 600; }
-    .modal-footer {
-      margin-top: 12px;
-      text-align: right;
-    }
+    .modal-footer { margin-top: 12px; text-align: right; }
 
     @media (max-width: 600px) {
       .header-text h1 { font-size: 1.1rem; }
@@ -257,6 +227,7 @@
       <button class="btn" id="yearBtn">This year</button>
       <button class="btn" id="showAllBtn">Show all</button>
       <button class="btn" id="hideAllBtn">Hide all</button>
+      <button class="btn" id="backBtn">Back to landing page</button>
     </div>
 
     <div class="togglebar" id="togglebar"></div>
@@ -289,7 +260,6 @@
   // ---------------------------
   // Config
   // ---------------------------
-  // Adjust these if your filenames differ.
   const ICS_BASE = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
 
   const FEEDS = [
@@ -305,8 +275,34 @@
     { id: 'HOLIDAYS', label: 'Holidays', url: ICS_BASE + 'holidays.ics', color: '#111827' }
   ];
 
+  // This is still used for persistence; index.html can also read this key if you want.
   const STORAGE_KEY = 'emerge_timeline_toggles_v1';
 
+  // IMPORTANT: this is what we send back to index.html (so it can render correctly)
+  // index.html should read ?show=... or ?hide=... (same semantics we already use here)
+  const INDEX_URL = 'index.html';
+
+  // ---------------------------
+  // Back link that carries toggle state
+  // ---------------------------
+  function buildIndexUrlFromToggles() {
+    // We pass an explicit "show=" list (only enabled feeds).
+    // This makes return deterministic even if index.html does NOT read localStorage.
+    const enabled = FEEDS
+      .map(f => f.id)
+      .filter(id => toggleState[id] === true);
+
+    // If everything is enabled, keep URL clean.
+    if (enabled.length === FEEDS.length) return INDEX_URL;
+
+    const params = new URLSearchParams();
+    params.set('show', enabled.join(','));
+    return INDEX_URL + '?' + params.toString();
+  }
+
+  // ---------------------------
+  // Status + library checks
+  // ---------------------------
   const statusEl = document.getElementById('status');
   function setError(msg) {
     statusEl.textContent = msg;
@@ -404,7 +400,7 @@
   }
 
   // ---------------------------
-  // Contrast helper (fix dark background + black text)
+  // Contrast helper
   // ---------------------------
   function hexToRgb(hex) {
     const h = (hex || '').replace('#','').trim();
@@ -437,16 +433,62 @@
   }
 
   // ---------------------------
+  // URL presets & persisted toggles
+  // ---------------------------
+  function getUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    const show = (p.get('show') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const hide = (p.get('hide') || '').split(',').map(s => s.trim()).filter(Boolean);
+    return { show, hide };
+  }
+
+  function loadToggleState() {
+    const base = Object.fromEntries(FEEDS.map(f => [f.id, true]));
+
+    // localStorage
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        for (const k of Object.keys(base)) {
+          if (typeof parsed[k] === 'boolean') base[k] = parsed[k];
+        }
+      }
+    } catch (_) {}
+
+    // URL overrides
+    const { show, hide } = getUrlParams();
+    if (show.length > 0) {
+      for (const k of Object.keys(base)) base[k] = false;
+      show.forEach(id => { if (id in base) base[id] = true; });
+    }
+    if (hide.length > 0) {
+      hide.forEach(id => { if (id in base) base[id] = false; });
+    }
+
+    return base;
+  }
+
+  function saveToggleState(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+
+  const toggleState = loadToggleState();
+
+  // Back button uses current toggleState (not stale localStorage)
+  document.getElementById('backBtn').addEventListener('click', () => {
+    // ensure persistence too
+    saveToggleState(toggleState);
+    window.location.href = buildIndexUrlFromToggles();
+  });
+
+  // ---------------------------
   // Timeline setup
   // ---------------------------
   const container = document.getElementById('timeline');
 
   const groups = new vis.DataSet(
-    FEEDS.map(f => ({
-      id: f.id,
-      content: f.label,
-      visible: true
-    }))
+    FEEDS.map(f => ({ id: f.id, content: f.label, visible: true }))
   );
 
   const items = new vis.DataSet();
@@ -460,6 +502,10 @@
     showMajorLabels: true,
     showMinorLabels: true
   });
+
+  function applyGroupVisibility() {
+    FEEDS.forEach(f => groups.update({ id: f.id, visible: !!toggleState[f.id] }));
+  }
 
   // Controls
   document.getElementById('zoomInBtn').addEventListener('click', () => {
@@ -489,55 +535,8 @@
   });
 
   // ---------------------------
-  // Toggle state (localStorage + URL presets)
-  // ---------------------------
-  function getUrlParams() {
-    const p = new URLSearchParams(window.location.search);
-    const show = (p.get('show') || '').split(',').map(s => s.trim()).filter(Boolean);
-    const hide = (p.get('hide') || '').split(',').map(s => s.trim()).filter(Boolean);
-    return { show, hide };
-  }
-
-  function loadToggleState() {
-    const base = Object.fromEntries(FEEDS.map(f => [f.id, true]));
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        for (const k of Object.keys(base)) {
-          if (typeof parsed[k] === 'boolean') base[k] = parsed[k];
-        }
-      }
-    } catch (_) {}
-
-    const { show, hide } = getUrlParams();
-    if (show.length > 0) {
-      for (const k of Object.keys(base)) base[k] = false;
-      show.forEach(id => { if (id in base) base[id] = true; });
-    }
-    if (hide.length > 0) {
-      hide.forEach(id => { if (id in base) base[id] = false; });
-    }
-
-    return base;
-  }
-
-  function saveToggleState(state) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (_) {}
-  }
-
-  const toggleState = loadToggleState();
-
-  function applyGroupVisibility() {
-    FEEDS.forEach(f => {
-      groups.update({ id: f.id, visible: !!toggleState[f.id] });
-    });
-  }
-
   // Toggle UI
+  // ---------------------------
   const togglebar = document.getElementById('togglebar');
 
   function renderToggles() {
@@ -545,10 +544,6 @@
     for (const feed of FEEDS) {
       const label = document.createElement('label');
       label.className = 'toggle';
-
-      const swatch = document.createElement('span');
-      swatch.className = 'swatch';
-      swatch.style.background = feed.color;
 
       const cb = document.createElement('input');
       cb.type = 'checkbox';
@@ -559,6 +554,10 @@
         applyGroupVisibility();
         setTimeout(() => timeline.redraw(), 0);
       });
+
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = feed.color;
 
       const text = document.createElement('span');
       text.textContent = feed.label;
@@ -624,6 +623,7 @@
   async function loadFeed(feed) {
     const resp = await fetch(feed.url);
     if (!resp.ok) throw new Error(feed.id + ' HTTP ' + resp.status);
+
     const text = await resp.text();
     const evs = parseICS(text);
 
@@ -667,9 +667,7 @@
     }
 
     items.clear();
-    for (const r of results) {
-      for (const it of r.items) items.add(it);
-    }
+    for (const r of results) for (const it of r.items) items.add(it);
 
     const total = results.reduce((sum, r) => sum + r.count, 0);
 
