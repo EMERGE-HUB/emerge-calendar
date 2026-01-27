@@ -1,4 +1,5 @@
-<!-- timeline.html (Back to index.html + pass toggle state so index can render the same) -->
+<!-- timeline.html (renamed from timeline-WP1.html)
+     NOTE: nav link points to index.html (not timeline-wp1) as requested -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,188 +14,79 @@
   <script src="/vendor/vis-timeline-graph2d.min.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f7fb;
-      color: #222;
-    }
+    body { margin:0; padding:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f7fb; color:#222; }
 
-    header {
-      background: #004f9f;
-      color: #fff;
-      padding: 16px 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
+    header { background:#004f9f; color:#fff; padding:16px 24px; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
+    .header-container { display:flex; align-items:center; gap:16px; }
+    .header-logo { background:#fff; padding:6px; border-radius:6px; height:60px; }
+    .header-text h1 { margin:0; font-size:1.3rem; }
+    .header-text p { margin:4px 0 0; font-size:0.9rem; opacity:0.95; }
 
-    .header-container {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .header-logo {
-      background: #ffffff;
-      padding: 6px;
-      border-radius: 6px;
-      height: 60px;
-    }
-
-    .header-text h1 { margin: 0; font-size: 1.3rem; }
-    .header-text p { margin: 4px 0 0; font-size: 0.9rem; opacity: 0.95; }
-
-    /* Minimal nav */
+    /* Minimal nav: link back to landing page */
     .wp-nav {
-      background: #ffffff;
-      padding: 10px 20px;
-      margin: 0 auto 20px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      border-radius: 6px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-      font-size: 0.9rem;
+      background:#fff;
+      padding:10px 20px;
+      margin:0 auto 20px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      border-radius:6px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.15);
+      font-size:0.9rem;
     }
+    .wp-nav a { color:#004f9f; text-decoration:none; font-weight:700; padding-bottom:2px; border-bottom:2px solid transparent; }
+    .wp-nav a:hover { text-decoration:underline; }
+    .wp-nav a.active { border-bottom-color:#004f9f; }
 
-    .wp-nav a {
-      color: #004f9f;
-      text-decoration: none;
-      font-weight: 700;
-      padding-bottom: 2px;
-      border-bottom: 2px solid transparent;
-    }
-    .wp-nav a:hover { text-decoration: underline; }
-    .wp-nav a.active { border-bottom-color: #004f9f; }
+    main { max-width:none; width:100%; margin:16px auto; padding:0 16px 40px; }
+    #status { margin-bottom:8px; font-size:0.9rem; color:#555; }
+    #status.error { color:#b00020; }
 
-    main {
-      max-width: none;
-      width: 100%;
-      margin: 16px auto;
-      padding: 0 16px 40px;
-    }
-
-    #status {
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: #555;
-    }
-    #status.error { color: #b00020; }
-
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+    .card { background:#fff; border-radius:8px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
 
     .btn {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #f3f4f6;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
+      display:inline-block; padding:6px 10px; border-radius:6px; border:1px solid #ccc;
+      background:#f3f4f6; cursor:pointer; font-size:0.85rem; font-weight:600;
     }
-    .btn:hover { background: #e5e7eb; }
+    .btn:hover { background:#e5e7eb; }
 
     .togglebar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 10px;
-      align-items: center;
-      margin-bottom: 10px;
-      padding: 10px;
-      border: 1px solid #e6e8ef;
-      border-radius: 8px;
-      background: #fbfcff;
+      display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center;
+      margin-bottom:10px; padding:10px; border:1px solid #e6e8ef; border-radius:8px; background:#fbfcff;
     }
-
     .toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border: 1px solid #dde2ee;
-      border-radius: 999px;
-      background: #fff;
-      cursor: pointer;
-      user-select: none;
-      font-size: 0.85rem;
-      font-weight: 650;
-      color: #111;
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid #dde2ee;
+      border-radius:999px; background:#fff; cursor:pointer; user-select:none; font-size:0.85rem; font-weight:650; color:#111;
     }
+    .toggle input { width:16px; height:16px; accent-color:#004f9f; margin:0; }
+    .swatch { width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,0.25); display:inline-block; }
 
-    .toggle input {
-      width: 16px;
-      height: 16px;
-      accent-color: #004f9f;
-      margin: 0;
-    }
-
-    .swatch {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-      border: 1px solid rgba(0,0,0,0.25);
-      display: inline-block;
-    }
-
-    #timeline {
-      height: calc(100vh - 300px);
-      min-height: 520px;
-      width: 100%;
-      border: 1px solid #e6e8ef;
-      border-radius: 8px;
-    }
+    #timeline { height:calc(100vh - 300px); min-height:520px; width:100%; border:1px solid #e6e8ef; border-radius:8px; }
 
     /* Modal */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-      z-index: 9999;
+      position:fixed; inset:0; background:rgba(0,0,0,0.4);
+      display:flex; align-items:center; justify-content:center;
+      visibility:hidden; opacity:0;
+      transition:opacity 0.2s ease, visibility 0.2s ease;
+      z-index:9999;
     }
-    .modal-backdrop.show { visibility: visible; opacity: 1; }
+    .modal-backdrop.show { visibility:visible; opacity:1; }
     .modal {
-      background: #fff;
-      border-radius: 10px;
-      max-width: 520px;
-      width: 92%;
-      padding: 20px 22px 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      background:#fff; border-radius:10px; max-width:520px; width:92%;
+      padding:20px 22px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.25);
     }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .modal-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
-    .modal-close { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; line-height: 1; }
-    .modal-body p { margin: 4px 0; font-size: 0.9rem; }
-    .modal-body p span.label { font-weight: 600; }
-    .modal-footer { margin-top: 12px; text-align: right; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .modal-title { font-size:1.05rem; font-weight:600; margin:0; }
+    .modal-close { border:none; background:transparent; font-size:1.2rem; cursor:pointer; line-height:1; }
+    .modal-body p { margin:4px 0; font-size:0.9rem; }
+    .modal-body p span.label { font-weight:600; }
+    .modal-footer { margin-top:12px; text-align:right; }
 
-    @media (max-width: 600px) {
-      .header-text h1 { font-size: 1.1rem; }
-      #timeline { height: calc(100vh - 340px); min-height: 420px; }
+    @media (max-width:600px) {
+      .header-text h1 { font-size:1.1rem; }
+      #timeline { height:calc(100vh - 340px); min-height:420px; }
     }
   </style>
 </head>
@@ -213,7 +105,9 @@
 </header>
 
 <nav class="wp-nav">
-  <a href="timeline-WP1.html" class="active">Timeline</a>
+  <!-- Per request: link goes to index.html (not timeline-wp1) -->
+  <a href="index.html" id="homeLink">Home</a>
+  <a href="timeline.html" class="active">Timeline</a>
 </nav>
 
 <main>
@@ -275,24 +169,14 @@
     { id: 'HOLIDAYS', label: 'Holidays', url: ICS_BASE + 'holidays.ics', color: '#111827' }
   ];
 
-  // This is still used for persistence; index.html can also read this key if you want.
   const STORAGE_KEY = 'emerge_timeline_toggles_v1';
-
-  // IMPORTANT: this is what we send back to index.html (so it can render correctly)
-  // index.html should read ?show=... or ?hide=... (same semantics we already use here)
   const INDEX_URL = 'index.html';
 
   // ---------------------------
-  // Back link that carries toggle state
+  // Return to index with current toggle state
   // ---------------------------
   function buildIndexUrlFromToggles() {
-    // We pass an explicit "show=" list (only enabled feeds).
-    // This makes return deterministic even if index.html does NOT read localStorage.
-    const enabled = FEEDS
-      .map(f => f.id)
-      .filter(id => toggleState[id] === true);
-
-    // If everything is enabled, keep URL clean.
+    const enabled = FEEDS.map(f => f.id).filter(id => toggleState[id] === true);
     if (enabled.length === FEEDS.length) return INDEX_URL;
 
     const params = new URLSearchParams();
@@ -300,14 +184,17 @@
     return INDEX_URL + '?' + params.toString();
   }
 
+  // Keep the header Home link consistent with toggles too (nice UX)
+  function updateHomeLinkHref() {
+    const home = document.getElementById('homeLink');
+    if (home) home.href = buildIndexUrlFromToggles();
+  }
+
   // ---------------------------
   // Status + library checks
   // ---------------------------
   const statusEl = document.getElementById('status');
-  function setError(msg) {
-    statusEl.textContent = msg;
-    statusEl.classList.add('error');
-  }
+  function setError(msg) { statusEl.textContent = msg; statusEl.classList.add('error'); }
 
   if (!window.vis || !vis.DataSet || !vis.Timeline) {
     setError('Timeline libraries failed to load. Check that /vendor/moment.min.js, /vendor/vis-data.min.js and /vendor/vis-timeline-graph2d.min.js load with HTTP 200, then review the browser console for blocked-script errors.');
@@ -405,18 +292,12 @@
   function hexToRgb(hex) {
     const h = (hex || '').replace('#','').trim();
     if (h.length === 3) {
-      const r = parseInt(h[0] + h[0], 16);
-      const g = parseInt(h[1] + h[1], 16);
-      const b = parseInt(h[2] + h[2], 16);
-      return { r, g, b };
+      return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
     }
     if (h.length === 6) {
-      const r = parseInt(h.slice(0,2), 16);
-      const g = parseInt(h.slice(2,4), 16);
-      const b = parseInt(h.slice(4,6), 16);
-      return { r, g, b };
+      return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
     }
-    return { r: 255, g: 255, b: 255 };
+    return { r:255, g:255, b:255 };
   }
 
   function relativeLuminance({r,g,b}) {
@@ -428,8 +309,7 @@
   }
 
   function bestTextColor(bgHex) {
-    const lum = relativeLuminance(hexToRgb(bgHex));
-    return lum < 0.45 ? '#ffffff' : '#111111';
+    return relativeLuminance(hexToRgb(bgHex)) < 0.45 ? '#ffffff' : '#111111';
   }
 
   // ---------------------------
@@ -445,7 +325,6 @@
   function loadToggleState() {
     const base = Object.fromEntries(FEEDS.map(f => [f.id, true]));
 
-    // localStorage
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -456,7 +335,6 @@
       }
     } catch (_) {}
 
-    // URL overrides
     const { show, hide } = getUrlParams();
     if (show.length > 0) {
       for (const k of Object.keys(base)) base[k] = false;
@@ -475,9 +353,8 @@
 
   const toggleState = loadToggleState();
 
-  // Back button uses current toggleState (not stale localStorage)
+  // Back button: persist + go to index with show=...
   document.getElementById('backBtn').addEventListener('click', () => {
-    // ensure persistence too
     saveToggleState(toggleState);
     window.location.href = buildIndexUrlFromToggles();
   });
@@ -486,11 +363,7 @@
   // Timeline setup
   // ---------------------------
   const container = document.getElementById('timeline');
-
-  const groups = new vis.DataSet(
-    FEEDS.map(f => ({ id: f.id, content: f.label, visible: true }))
-  );
-
+  const groups = new vis.DataSet(FEEDS.map(f => ({ id: f.id, content: f.label, visible: true })));
   const items = new vis.DataSet();
 
   const timeline = new vis.Timeline(container, items, groups, {
@@ -552,6 +425,7 @@
         toggleState[feed.id] = cb.checked;
         saveToggleState(toggleState);
         applyGroupVisibility();
+        updateHomeLinkHref();
         setTimeout(() => timeline.redraw(), 0);
       });
 
@@ -574,6 +448,7 @@
     saveToggleState(toggleState);
     renderToggles();
     applyGroupVisibility();
+    updateHomeLinkHref();
   });
 
   document.getElementById('hideAllBtn').addEventListener('click', () => {
@@ -581,10 +456,12 @@
     saveToggleState(toggleState);
     renderToggles();
     applyGroupVisibility();
+    updateHomeLinkHref();
   });
 
   renderToggles();
   applyGroupVisibility();
+  updateHomeLinkHref();
 
   // ---------------------------
   // Modal
