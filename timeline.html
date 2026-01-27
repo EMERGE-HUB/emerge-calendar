@@ -1,4 +1,4 @@
-<!-- timeline-WP1.html  (rewritten to support toggles for WP1–WP9 + Holidays) -->
+<!-- timeline-WP1.html (nav cleaned: ONLY Timeline link kept) -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,12 +52,12 @@
       opacity: 0.95;
     }
 
+    /* Minimal nav: single link */
     .wp-nav {
       background: #ffffff;
       padding: 10px 20px;
       margin: 0 auto 20px;
       display: flex;
-      flex-wrap: wrap;
       gap: 12px;
       align-items: center;
       border-radius: 6px;
@@ -68,22 +68,14 @@
     .wp-nav a {
       color: #004f9f;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
       padding-bottom: 2px;
       border-bottom: 2px solid transparent;
     }
-
     .wp-nav a:hover { text-decoration: underline; }
-
     .wp-nav a.active {
       border-bottom-color: #004f9f;
       text-decoration: none;
-    }
-
-    .wp-nav .divider {
-      color: #666;
-      margin: 0 6px;
-      font-weight: 600;
     }
 
     main {
@@ -127,7 +119,6 @@
     }
     .btn:hover { background: #e5e7eb; }
 
-    /* Toggle bar */
     .togglebar {
       display: flex;
       flex-wrap: wrap;
@@ -171,7 +162,7 @@
     }
 
     #timeline {
-      height: calc(100vh - 320px);
+      height: calc(100vh - 300px);
       min-height: 520px;
       width: 100%;
       border: 1px solid #e6e8ef;
@@ -233,7 +224,7 @@
 
     @media (max-width: 600px) {
       .header-text h1 { font-size: 1.1rem; }
-      #timeline { height: calc(100vh - 360px); min-height: 420px; }
+      #timeline { height: calc(100vh - 340px); min-height: 420px; }
     }
   </style>
 </head>
@@ -252,26 +243,6 @@
 </header>
 
 <nav class="wp-nav">
-  <a href="WP1.html">WP1</a>
-  <a href="WP2.html">WP2</a>
-  <a href="WP3.html">WP3</a>
-  <a href="WP4.html">WP4</a>
-  <a href="WP5.html">WP5</a>
-  <a href="WP6.html">WP6</a>
-  <a href="WP7.html">WP7</a>
-  <a href="WP8.html">WP8</a>
-  <a href="WP9.html">WP9</a>
-
-  <span class="divider">|</span>
-
-  <a href="events.html">Events Calendar</a>
-  <a href="meetings.html">Meetings Calendar</a>
-  <a href="meetings-events.html">Meetings &amp; Events</a>
-  <a href="all.html">All Calendar</a>
-
-  <span class="divider">|</span>
-
-  <!-- keep the “timeline link” pattern: this page is the timeline -->
   <a href="timeline-WP1.html" class="active">Timeline</a>
 </nav>
 
@@ -286,7 +257,6 @@
       <button class="btn" id="yearBtn">This year</button>
       <button class="btn" id="showAllBtn">Show all</button>
       <button class="btn" id="hideAllBtn">Hide all</button>
-      <button class="btn" id="backBtn">Back to calendar</button>
     </div>
 
     <div class="togglebar" id="togglebar"></div>
@@ -319,7 +289,7 @@
   // ---------------------------
   // Config
   // ---------------------------
-  // If your WP ICS filenames/paths differ, change them here.
+  // Adjust these if your filenames differ.
   const ICS_BASE = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
 
   const FEEDS = [
@@ -337,22 +307,6 @@
 
   const STORAGE_KEY = 'emerge_timeline_toggles_v1';
 
-  // ---------------------------
-  // Nav highlight
-  // ---------------------------
-  (function markActiveNav() {
-    const path = (window.location.pathname.split('/').pop() || '').toLowerCase();
-    document.querySelectorAll('.wp-nav a').forEach(a => {
-      const href = (a.getAttribute('href') || '').toLowerCase();
-      if (href === path) a.classList.add('active');
-    });
-  })();
-
-  document.getElementById('backBtn').addEventListener('click', () => {
-    // keep same behaviour as your original (back to WP1 calendar page)
-    window.location.href = 'WP1.html';
-  });
-
   const statusEl = document.getElementById('status');
   function setError(msg) {
     statusEl.textContent = msg;
@@ -365,7 +319,7 @@
   }
 
   // ---------------------------
-  // ICS parsing (same approach as your file)
+  // ICS parsing
   // ---------------------------
   function parseICS(icsText) {
     const rawLines = icsText.split(/\r?\n/);
@@ -402,7 +356,6 @@
     function parseICSTime(v) {
       if (!v) return null;
 
-      // All-day date (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
         const m = parseInt(v.slice(4,6), 10) - 1;
@@ -410,7 +363,6 @@
         return { date: new Date(Date.UTC(y, m, d)), allDay: true };
       }
 
-      // Date-time (local or Z)
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
@@ -442,7 +394,6 @@
     const optionsTime = { hour: '2-digit', minute: '2-digit' };
 
     if (allDay) {
-      // In ICS, all-day DTEND is often exclusive; we keep your existing behaviour (display raw end if present)
       if (end) return start.toLocaleDateString(undefined, optionsDate) + ' – ' + end.toLocaleDateString(undefined, optionsDate);
       return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
     }
@@ -453,7 +404,7 @@
   }
 
   // ---------------------------
-  // Contrast helper (fix “dark bg + black text” issue)
+  // Contrast helper (fix dark background + black text)
   // ---------------------------
   function hexToRgb(hex) {
     const h = (hex || '').replace('#','').trim();
@@ -482,7 +433,6 @@
 
   function bestTextColor(bgHex) {
     const lum = relativeLuminance(hexToRgb(bgHex));
-    // If background is dark -> white text, else black
     return lum < 0.45 ? '#ffffff' : '#111111';
   }
 
@@ -540,9 +490,6 @@
 
   // ---------------------------
   // Toggle state (localStorage + URL presets)
-  // URL examples:
-  //  - timeline-WP1.html?show=WP1,WP3,HOLIDAYS
-  //  - timeline-WP1.html?hide=WP2,WP4
   // ---------------------------
   function getUrlParams() {
     const p = new URLSearchParams(window.location.search);
@@ -552,10 +499,8 @@
   }
 
   function loadToggleState() {
-    // default: everything visible
     const base = Object.fromEntries(FEEDS.map(f => [f.id, true]));
 
-    // apply localStorage
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -566,7 +511,6 @@
       }
     } catch (_) {}
 
-    // apply URL presets (override)
     const { show, hide } = getUrlParams();
     if (show.length > 0) {
       for (const k of Object.keys(base)) base[k] = false;
@@ -613,7 +557,6 @@
         toggleState[feed.id] = cb.checked;
         saveToggleState(toggleState);
         applyGroupVisibility();
-        // keep viewport sane if user hides everything currently in view
         setTimeout(() => timeline.redraw(), 0);
       });
 
@@ -676,7 +619,7 @@
   });
 
   // ---------------------------
-  // Loading feeds
+  // Load feeds
   // ---------------------------
   async function loadFeed(feed) {
     const resp = await fetch(feed.url);
@@ -713,7 +656,6 @@
     const results = [];
     const errors = [];
 
-    // sequential fetch keeps it simple & avoids hammering the origin; change to Promise.all if you want parallel
     for (const feed of FEEDS) {
       try {
         const itemsForFeed = await loadFeed(feed);
@@ -724,7 +666,6 @@
       }
     }
 
-    // add items
     items.clear();
     for (const r of results) {
       for (const it of r.items) items.add(it);
