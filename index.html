@@ -127,21 +127,6 @@
     }
     .btn:hover{ background:#e5e7eb; }
 
-    .legend{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 10px 16px;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .legend-item{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-    }
-
     #calendar{
       background: var(--card);
       border-radius: 8px;
@@ -183,17 +168,51 @@
     }
     .fc .fc-list-event.src-holidays .fc-list-event-title a{ color:#0b3b33 !important; }
 
-    /* Ensure list view text remains readable on coloured rows (WP + holidays) */
-    .fc .fc-list-event { color: #ffffff; }
+    /* ===== List view readability fix =====
+       FullCalendar list view colours are painted on <td>, so style the cells and force text/link colour to inherit.
+    */
+    .fc .fc-list-event td{
+      color: inherit !important;
+    }
+
+    .fc .fc-list-event .fc-list-event-title,
     .fc .fc-list-event .fc-list-event-title a,
-    .fc .fc-list-event .fc-list-event-time { color: inherit !important; }
-    /* Override for light holiday colour */
-    .fc .fc-list-event.src-holidays { color: #0b3b33; }
+    .fc .fc-list-event .fc-list-event-time{
+      color: inherit !important;
+      opacity: 1 !important;
+    }
 
-    /* Mint hover highlight without "disappearing" text */
-    .fc .fc-list-event td { transition: box-shadow 0.12s ease; }
-    .fc .fc-list-event:hover td { box-shadow: inset 0 0 0 9999px rgba(170,217,214,0.22); }
+    /* WPs: dark backgrounds => white text in list view */
+    .fc .fc-list-event.src-wp1 td,
+    .fc .fc-list-event.src-wp2 td,
+    .fc .fc-list-event.src-wp3 td,
+    .fc .fc-list-event.src-wp4 td,
+    .fc .fc-list-event.src-wp5 td,
+    .fc .fc-list-event.src-wp6 td,
+    .fc .fc-list-event.src-wp7 td,
+    .fc .fc-list-event.src-wp8 td,
+    .fc .fc-list-event.src-wp9 td{
+      color:#fff !important;
+    }
 
+    /* Apply the same backgrounds to list cells (matches your event colours) */
+    .fc .fc-list-event.src-wp1 td{ background:#1f4e99 !important; border-color:#1f4e99 !important; }
+    .fc .fc-list-event.src-wp2 td{ background:#6b21a8 !important; border-color:#6b21a8 !important; }
+    .fc .fc-list-event.src-wp3 td{ background:#0f766e !important; border-color:#0f766e !important; }
+    .fc .fc-list-event.src-wp4 td{ background:#b45309 !important; border-color:#b45309 !important; }
+    .fc .fc-list-event.src-wp5 td{ background:#0f172a !important; border-color:#0f172a !important; }
+    .fc .fc-list-event.src-wp6 td{ background:#1d4ed8 !important; border-color:#1d4ed8 !important; }
+    .fc .fc-list-event.src-wp7 td{ background:#be123c !important; border-color:#be123c !important; }
+    .fc .fc-list-event.src-wp8 td{ background:#2e7d32 !important; border-color:#2e7d32 !important; }
+    .fc .fc-list-event.src-wp9 td{ background:#374151 !important; border-color:#374151 !important; }
+
+    /* Holidays: mint background => dark text */
+    .fc .fc-list-event.src-holidays td{
+      background: var(--emerge-mint) !important;
+      border-color: #52b69a !important;
+      color: #0b3b33 !important;
+      font-weight: 600;
+    }
 
     @media (max-width:600px){
       .header-text h1{ font-size:1.1rem; }
@@ -395,10 +414,8 @@
   }
 
   // ============================================================
-  // UI: toggles + legend
+  // UI: toggles
   // ============================================================
-  }
-
   function renderToggles(selected) {
     const togglesEl = document.getElementById('toggles');
     togglesEl.innerHTML = '';
@@ -435,19 +452,18 @@
 
     const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
       initialView: 'listYear',
+      customButtons: {
+        timeline: {
+          text: 'Timeline',
+          click: function() {
+            window.location.href = 'timeline.html';
+          }
+        }
+      },
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timelineBtn'
-      },
-      customButtons: {
-        timelineBtn: {
-          text: 'Timeline',
-          click: function() {
-            // WP1 timeline view (extend later for all-WP timelines)
-            window.location.href = 'timeline-WP1.html';
-          }
-        }
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timeline'
       },
       views: {
         listYear: { buttonText: 'Year list' },
