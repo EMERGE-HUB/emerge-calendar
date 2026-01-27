@@ -456,7 +456,16 @@
         timeline: {
           text: 'Timeline',
           click: function() {
-            window.location.href = 'timeline.html';
+            // Pass current selection to timeline.html so it can render the same toggles/feeds
+            const sel = getSelectionFromStorage() || defaultSelection();
+            const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
+            const holidaysOn = sel.has('holidays');
+
+            const params = new URLSearchParams();
+            params.set('wps', wps.length ? wps.join(',') : 'none');
+            params.set('holidays', holidaysOn ? 'on' : 'off');
+
+            window.location.href = 'timeline.html?' + params.toString();
           }
         }
       },
