@@ -1,0 +1,747 @@
+<!-- timeline-WP1.html  (rewritten to support toggles for WP1–WP9 + Holidays) -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EMERGE – Timeline (WPs + Holidays)</title>
+
+  <!-- vis-timeline (self-hosted) -->
+  <link rel="stylesheet" href="/vendor/vis-timeline-graph2d.min.css">
+
+  <script src="/vendor/moment.min.js"></script>
+  <script src="/vendor/vis-data.min.js"></script>
+  <script src="/vendor/vis-timeline-graph2d.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #004f9f;
+      color: #fff;
+      padding: 16px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 6px;
+      height: 60px;
+    }
+
+    .header-text h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .header-text p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .wp-nav {
+      background: #ffffff;
+      padding: 10px 20px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+    }
+
+    .wp-nav a {
+      color: #004f9f;
+      text-decoration: none;
+      font-weight: 600;
+      padding-bottom: 2px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .wp-nav a:hover { text-decoration: underline; }
+
+    .wp-nav a.active {
+      border-bottom-color: #004f9f;
+      text-decoration: none;
+    }
+
+    .wp-nav .divider {
+      color: #666;
+      margin: 0 6px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: none;
+      width: 100%;
+      margin: 16px auto;
+      padding: 0 16px 40px;
+    }
+
+    #status {
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    #status.error { color: #b00020; }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn:hover { background: #e5e7eb; }
+
+    /* Toggle bar */
+    .togglebar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #e6e8ef;
+      border-radius: 8px;
+      background: #fbfcff;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid #dde2ee;
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.85rem;
+      font-weight: 650;
+      color: #111;
+    }
+
+    .toggle input {
+      width: 16px;
+      height: 16px;
+      accent-color: #004f9f;
+      margin: 0;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.25);
+      display: inline-block;
+    }
+
+    #timeline {
+      height: calc(100vh - 320px);
+      min-height: 520px;
+      width: 100%;
+      border: 1px solid #e6e8ef;
+      border-radius: 8px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 9999;
+    }
+    .modal-backdrop.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      max-width: 520px;
+      width: 92%;
+      padding: 20px 22px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .modal-close {
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-body p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+    }
+    .modal-body p span.label { font-weight: 600; }
+    .modal-footer {
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 600px) {
+      .header-text h1 { font-size: 1.1rem; }
+      #timeline { height: calc(100vh - 360px); min-height: 420px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="header-container">
+    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
+         alt="EMERGE Logo"
+         class="header-logo" />
+    <div class="header-text">
+      <h1>EMERGE – Timeline (WPs + Holidays)</h1>
+      <p>Toggle Work Packages and Holidays (ICS feeds)</p>
+    </div>
+  </div>
+</header>
+
+<nav class="wp-nav">
+  <a href="WP1.html">WP1</a>
+  <a href="WP2.html">WP2</a>
+  <a href="WP3.html">WP3</a>
+  <a href="WP4.html">WP4</a>
+  <a href="WP5.html">WP5</a>
+  <a href="WP6.html">WP6</a>
+  <a href="WP7.html">WP7</a>
+  <a href="WP8.html">WP8</a>
+  <a href="WP9.html">WP9</a>
+
+  <span class="divider">|</span>
+
+  <a href="events.html">Events Calendar</a>
+  <a href="meetings.html">Meetings Calendar</a>
+  <a href="meetings-events.html">Meetings &amp; Events</a>
+  <a href="all.html">All Calendar</a>
+
+  <span class="divider">|</span>
+
+  <!-- keep the “timeline link” pattern: this page is the timeline -->
+  <a href="timeline-WP1.html" class="active">Timeline</a>
+</nav>
+
+<main>
+  <div id="status">Loading timeline…</div>
+
+  <div class="card">
+    <div class="controls">
+      <button class="btn" id="zoomInBtn">Zoom in</button>
+      <button class="btn" id="zoomOutBtn">Zoom out</button>
+      <button class="btn" id="fitBtn">Fit all</button>
+      <button class="btn" id="yearBtn">This year</button>
+      <button class="btn" id="showAllBtn">Show all</button>
+      <button class="btn" id="hideAllBtn">Hide all</button>
+      <button class="btn" id="backBtn">Back to calendar</button>
+    </div>
+
+    <div class="togglebar" id="togglebar"></div>
+
+    <div id="timeline"></div>
+  </div>
+</main>
+
+<!-- Event detail modal -->
+<div id="eventModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><span class="label">When:</span> <span id="modalWhen"></span></p>
+      <p><span class="label">Source:</span> <span id="modalSource"></span></p>
+      <p><span class="label">Location:</span> <span id="modalLocation"></span></p>
+      <p><span class="label">Description:</span></p>
+      <p id="modalDescription"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="modalOkBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------------------------
+  // Config
+  // ---------------------------
+  // If your WP ICS filenames/paths differ, change them here.
+  const ICS_BASE = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
+
+  const FEEDS = [
+    { id: 'WP1', label: 'WP1', url: ICS_BASE + 'wp1.ics', color: '#1f77b4' },
+    { id: 'WP2', label: 'WP2', url: ICS_BASE + 'wp2.ics', color: '#ff7f0e' },
+    { id: 'WP3', label: 'WP3', url: ICS_BASE + 'wp3.ics', color: '#2ca02c' },
+    { id: 'WP4', label: 'WP4', url: ICS_BASE + 'wp4.ics', color: '#d62728' },
+    { id: 'WP5', label: 'WP5', url: ICS_BASE + 'wp5.ics', color: '#9467bd' },
+    { id: 'WP6', label: 'WP6', url: ICS_BASE + 'wp6.ics', color: '#8c564b' },
+    { id: 'WP7', label: 'WP7', url: ICS_BASE + 'wp7.ics', color: '#e377c2' },
+    { id: 'WP8', label: 'WP8', url: ICS_BASE + 'wp8.ics', color: '#7f7f7f' },
+    { id: 'WP9', label: 'WP9', url: ICS_BASE + 'wp9.ics', color: '#17becf' },
+    { id: 'HOLIDAYS', label: 'Holidays', url: ICS_BASE + 'holidays.ics', color: '#111827' }
+  ];
+
+  const STORAGE_KEY = 'emerge_timeline_toggles_v1';
+
+  // ---------------------------
+  // Nav highlight
+  // ---------------------------
+  (function markActiveNav() {
+    const path = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    document.querySelectorAll('.wp-nav a').forEach(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      if (href === path) a.classList.add('active');
+    });
+  })();
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    // keep same behaviour as your original (back to WP1 calendar page)
+    window.location.href = 'WP1.html';
+  });
+
+  const statusEl = document.getElementById('status');
+  function setError(msg) {
+    statusEl.textContent = msg;
+    statusEl.classList.add('error');
+  }
+
+  if (!window.vis || !vis.DataSet || !vis.Timeline) {
+    setError('Timeline libraries failed to load. Check that /vendor/moment.min.js, /vendor/vis-data.min.js and /vendor/vis-timeline-graph2d.min.js load with HTTP 200, then review the browser console for blocked-script errors.');
+    throw new Error('vis libraries missing');
+  }
+
+  // ---------------------------
+  // ICS parsing (same approach as your file)
+  // ---------------------------
+  function parseICS(icsText) {
+    const rawLines = icsText.split(/\r?\n/);
+    const lines = [];
+    for (const line of rawLines) {
+      if (!line) continue;
+      if (line.startsWith(' ') || line.startsWith('\t')) {
+        if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
+      } else {
+        lines.push(line);
+      }
+    }
+
+    const vevents = [];
+    let current = null;
+
+    for (const line of lines) {
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
+      if (line.startsWith('END:VEVENT')) { if (current) vevents.push(current); current = null; continue; }
+      if (!current) continue;
+
+      const parts = line.split(':');
+      if (parts.length < 2) continue;
+      const value = parts.slice(1).join(':');
+      const key = parts[0].split(';')[0].toUpperCase();
+
+      if (key === 'SUMMARY') current.summary = value;
+      if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
+      if (key === 'LOCATION') current.location = value;
+      if (key === 'DTSTART') current.dtstart = value;
+      if (key === 'DTEND') current.dtend = value;
+    }
+
+    function parseICSTime(v) {
+      if (!v) return null;
+
+      // All-day date (YYYYMMDD)
+      if (v.length === 8 && !v.includes('T')) {
+        const y = parseInt(v.slice(0,4), 10);
+        const m = parseInt(v.slice(4,6), 10) - 1;
+        const d = parseInt(v.slice(6,8), 10);
+        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+      }
+
+      // Date-time (local or Z)
+      const y = parseInt(v.slice(0,4), 10);
+      const m = parseInt(v.slice(4,6), 10) - 1;
+      const d = parseInt(v.slice(6,8), 10);
+      const hh = parseInt(v.slice(9,11) || '0', 10);
+      const mm = parseInt(v.slice(11,13) || '0', 10);
+      const ss = parseInt(v.slice(13,15) || '0', 10);
+
+      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
+    }
+
+    return vevents.map(ev => {
+      const startParsed = parseICSTime(ev.dtstart);
+      const endParsed = parseICSTime(ev.dtend);
+      return {
+        title: ev.summary || '(no title)',
+        start: startParsed ? startParsed.date : null,
+        end: endParsed ? endParsed.date : null,
+        allDay: startParsed ? startParsed.allDay : false,
+        description: ev.description || '',
+        location: ev.location || ''
+      };
+    }).filter(e => e.start);
+  }
+
+  function formatDateRange(start, end, allDay) {
+    if (!start) return 'Unknown';
+    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit' };
+
+    if (allDay) {
+      // In ICS, all-day DTEND is often exclusive; we keep your existing behaviour (display raw end if present)
+      if (end) return start.toLocaleDateString(undefined, optionsDate) + ' – ' + end.toLocaleDateString(undefined, optionsDate);
+      return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
+    }
+
+    let text = start.toLocaleDateString(undefined, optionsDate) + ' ' + start.toLocaleTimeString(undefined, optionsTime);
+    if (end) text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
+    return text;
+  }
+
+  // ---------------------------
+  // Contrast helper (fix “dark bg + black text” issue)
+  // ---------------------------
+  function hexToRgb(hex) {
+    const h = (hex || '').replace('#','').trim();
+    if (h.length === 3) {
+      const r = parseInt(h[0] + h[0], 16);
+      const g = parseInt(h[1] + h[1], 16);
+      const b = parseInt(h[2] + h[2], 16);
+      return { r, g, b };
+    }
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0,2), 16);
+      const g = parseInt(h.slice(2,4), 16);
+      const b = parseInt(h.slice(4,6), 16);
+      return { r, g, b };
+    }
+    return { r: 255, g: 255, b: 255 };
+  }
+
+  function relativeLuminance({r,g,b}) {
+    const srgb = [r,g,b].map(v => {
+      const x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  }
+
+  function bestTextColor(bgHex) {
+    const lum = relativeLuminance(hexToRgb(bgHex));
+    // If background is dark -> white text, else black
+    return lum < 0.45 ? '#ffffff' : '#111111';
+  }
+
+  // ---------------------------
+  // Timeline setup
+  // ---------------------------
+  const container = document.getElementById('timeline');
+
+  const groups = new vis.DataSet(
+    FEEDS.map(f => ({
+      id: f.id,
+      content: f.label,
+      visible: true
+    }))
+  );
+
+  const items = new vis.DataSet();
+
+  const timeline = new vis.Timeline(container, items, groups, {
+    stack: true,
+    horizontalScroll: true,
+    zoomKey: 'ctrlKey',
+    orientation: { axis: 'top' },
+    margin: { item: 10, axis: 10 },
+    showMajorLabels: true,
+    showMinorLabels: true
+  });
+
+  // Controls
+  document.getElementById('zoomInBtn').addEventListener('click', () => {
+    const range = timeline.getWindow();
+    const interval = range.end - range.start;
+    timeline.setWindow({
+      start: new Date(range.start.valueOf() + interval * 0.2),
+      end: new Date(range.end.valueOf() - interval * 0.2)
+    });
+  });
+
+  document.getElementById('zoomOutBtn').addEventListener('click', () => {
+    const range = timeline.getWindow();
+    const interval = range.end - range.start;
+    timeline.setWindow({
+      start: new Date(range.start.valueOf() - interval * 0.25),
+      end: new Date(range.end.valueOf() + interval * 0.25)
+    });
+  });
+
+  document.getElementById('fitBtn').addEventListener('click', () => timeline.fit());
+
+  document.getElementById('yearBtn').addEventListener('click', () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    timeline.setWindow(new Date(y, 0, 1), new Date(y, 11, 31, 23, 59, 59));
+  });
+
+  // ---------------------------
+  // Toggle state (localStorage + URL presets)
+  // URL examples:
+  //  - timeline-WP1.html?show=WP1,WP3,HOLIDAYS
+  //  - timeline-WP1.html?hide=WP2,WP4
+  // ---------------------------
+  function getUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    const show = (p.get('show') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const hide = (p.get('hide') || '').split(',').map(s => s.trim()).filter(Boolean);
+    return { show, hide };
+  }
+
+  function loadToggleState() {
+    // default: everything visible
+    const base = Object.fromEntries(FEEDS.map(f => [f.id, true]));
+
+    // apply localStorage
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        for (const k of Object.keys(base)) {
+          if (typeof parsed[k] === 'boolean') base[k] = parsed[k];
+        }
+      }
+    } catch (_) {}
+
+    // apply URL presets (override)
+    const { show, hide } = getUrlParams();
+    if (show.length > 0) {
+      for (const k of Object.keys(base)) base[k] = false;
+      show.forEach(id => { if (id in base) base[id] = true; });
+    }
+    if (hide.length > 0) {
+      hide.forEach(id => { if (id in base) base[id] = false; });
+    }
+
+    return base;
+  }
+
+  function saveToggleState(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  }
+
+  const toggleState = loadToggleState();
+
+  function applyGroupVisibility() {
+    FEEDS.forEach(f => {
+      groups.update({ id: f.id, visible: !!toggleState[f.id] });
+    });
+  }
+
+  // Toggle UI
+  const togglebar = document.getElementById('togglebar');
+
+  function renderToggles() {
+    togglebar.innerHTML = '';
+    for (const feed of FEEDS) {
+      const label = document.createElement('label');
+      label.className = 'toggle';
+
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = feed.color;
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!toggleState[feed.id];
+      cb.addEventListener('change', () => {
+        toggleState[feed.id] = cb.checked;
+        saveToggleState(toggleState);
+        applyGroupVisibility();
+        // keep viewport sane if user hides everything currently in view
+        setTimeout(() => timeline.redraw(), 0);
+      });
+
+      const text = document.createElement('span');
+      text.textContent = feed.label;
+
+      label.appendChild(cb);
+      label.appendChild(swatch);
+      label.appendChild(text);
+      togglebar.appendChild(label);
+    }
+  }
+
+  document.getElementById('showAllBtn').addEventListener('click', () => {
+    FEEDS.forEach(f => toggleState[f.id] = true);
+    saveToggleState(toggleState);
+    renderToggles();
+    applyGroupVisibility();
+  });
+
+  document.getElementById('hideAllBtn').addEventListener('click', () => {
+    FEEDS.forEach(f => toggleState[f.id] = false);
+    saveToggleState(toggleState);
+    renderToggles();
+    applyGroupVisibility();
+  });
+
+  renderToggles();
+  applyGroupVisibility();
+
+  // ---------------------------
+  // Modal
+  // ---------------------------
+  const modalBackdrop = document.getElementById('eventModalBackdrop');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalWhen = document.getElementById('modalWhen');
+  const modalSource = document.getElementById('modalSource');
+  const modalLocation = document.getElementById('modalLocation');
+  const modalDescription = document.getElementById('modalDescription');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const modalOkBtn = document.getElementById('modalOkBtn');
+
+  function closeModal() { modalBackdrop.classList.remove('show'); }
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalOkBtn.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+
+  timeline.on('select', function(props) {
+    if (!props.items || props.items.length === 0) return;
+    const id = props.items[0];
+    const item = items.get(id);
+    if (!item) return;
+
+    modalTitle.textContent = item.title || item.content || '(no title)';
+    modalWhen.textContent = formatDateRange(item.start, item.end, item.allDay);
+    modalSource.textContent = item.group || '—';
+    modalLocation.textContent = item.location || 'Not specified';
+    modalDescription.textContent = item.description || 'No description provided.';
+    modalBackdrop.classList.add('show');
+  });
+
+  // ---------------------------
+  // Loading feeds
+  // ---------------------------
+  async function loadFeed(feed) {
+    const resp = await fetch(feed.url);
+    if (!resp.ok) throw new Error(feed.id + ' HTTP ' + resp.status);
+    const text = await resp.text();
+    const evs = parseICS(text);
+
+    const bg = feed.color;
+    const fg = bestTextColor(bg);
+    const style = `background-color:${bg};border-color:${bg};color:${fg};`;
+
+    return evs.map((ev, idx) => {
+      const hasEnd = !!ev.end;
+      return {
+        id: feed.id.toLowerCase() + '-' + idx,
+        group: feed.id,
+        content: ev.title,
+        title: ev.title,
+        start: ev.start,
+        end: hasEnd ? ev.end : undefined,
+        type: hasEnd ? 'range' : 'point',
+        allDay: ev.allDay,
+        description: ev.description,
+        location: ev.location,
+        style
+      };
+    });
+  }
+
+  async function loadTimeline() {
+    statusEl.textContent = 'Loading timeline from ICS feeds…';
+    statusEl.classList.remove('error');
+
+    const results = [];
+    const errors = [];
+
+    // sequential fetch keeps it simple & avoids hammering the origin; change to Promise.all if you want parallel
+    for (const feed of FEEDS) {
+      try {
+        const itemsForFeed = await loadFeed(feed);
+        results.push({ id: feed.id, count: itemsForFeed.length, items: itemsForFeed });
+      } catch (e) {
+        console.error('Feed load failed:', feed.id, e);
+        errors.push(feed.id + ': ' + (e && e.message ? e.message : e));
+      }
+    }
+
+    // add items
+    items.clear();
+    for (const r of results) {
+      for (const it of r.items) items.add(it);
+    }
+
+    const total = results.reduce((sum, r) => sum + r.count, 0);
+
+    if (errors.length > 0) {
+      setError('Loaded ' + total + ' items, but some feeds failed: ' + errors.join(' | '));
+    } else {
+      statusEl.textContent = 'Timeline loaded (' + total + ' items across ' + FEEDS.length + ' feeds).';
+    }
+
+    if (total > 0) timeline.fit();
+  }
+
+  loadTimeline();
+</script>
+</body>
+</html>
