@@ -2,347 +2,256 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>EMERGE – WP1 Calendar</title>
+  <title>EMERGE – Calendar Hub</title>
 
-  <!-- FullCalendar Standard -->
+  <!-- FullCalendar (free) -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f7fb;
-      color: #222;
+    :root{
+      --emerge-blue:#004f9f;
+      --emerge-mint:#bfeee6;
+      --emerge-mint-soft:#e6faf6;
+      --text:#111827;
+      --muted:#4b5563;
+      --card:#ffffff;
+      --bg:#f5f7fb;
     }
 
-    header {
-      background: #004f9f;
-      color: #fff;
-      padding: 16px 24px;
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header{
+      background: var(--emerge-blue);
+      color:#fff;
+      padding:16px 24px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    .header-container {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    .header-container{
+      display:flex;
+      align-items:center;
+      gap:16px;
     }
 
-    .header-logo {
-      background: #ffffff;
-      padding: 6px;
-      border-radius: 6px;
-      height: 60px; /* adjust size to taste */
+    .header-logo{
+      background:#ffffff;
+      padding:6px;
+      border-radius:6px;
+      height:60px;
     }
 
-    .header-text h1 {
-      margin: 0;
-      font-size: 1.3rem;
-    }
+    .header-text h1{ margin:0; font-size:1.3rem; }
+    .header-text p{ margin:4px 0 0; font-size:0.9rem; opacity:0.95; }
 
-    .header-text p {
-      margin: 4px 0 0;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    main {
-      max-width: 1100px;
-      margin: 24px auto;
+    main{
+      max-width: 1200px;
+      margin: 20px auto;
       padding: 0 12px 40px;
     }
 
-    #status {
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    #status.error {
-      color: #b00020;
-    }
-
-    #calendar {
-      background: #fff;
+    .card{
+      background: var(--card);
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px 14px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.02);
+      margin-bottom: 12px;
     }
 
-    /* Simple modal for event details */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-      z-index: 9999;
-    }
-
-    .modal-backdrop.show {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .modal {
-      background: #fff;
-      border-radius: 10px;
-      max-width: 520px;
-      width: 92%;
-      padding: 20px 22px 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .modal-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      font-size: 1.2rem;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .modal-body p {
-      margin: 4px 0;
+    #status{
+      margin: 0 0 10px;
       font-size: 0.9rem;
+      color: var(--muted);
     }
 
-    .modal-body p span.label {
-      font-weight: 600;
+    #status.error{ color:#b00020; }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px 14px;
+      align-items:center;
+      justify-content:space-between;
     }
 
-    .modal-footer {
-      margin-top: 12px;
-      text-align: right;
+    .toggles{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px 14px;
+      align-items:center;
     }
 
-    .btn {
-      display: inline-block;
-      padding: 6px 12px;
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+      font-size:0.92rem;
+      color: var(--text);
+    }
+
+    .toggle input{ transform: translateY(1px); }
+
+    .swatch{
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.2);
+      flex: 0 0 auto;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      align-items:center;
+    }
+
+    .btn{
+      display:inline-block;
+      padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid #ccc;
+      border: 1px solid #cfd6e4;
       background: #f3f4f6;
       cursor: pointer;
       font-size: 0.85rem;
-    }
-
-    .btn:hover {
-      background: #e5e7eb;
-    }
-
-    .wp-nav {
-      background: #ffffff;
-      padding: 10px 20px;
-      margin: 0 auto 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      border-radius: 6px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-      font-size: 0.9rem;
-    }
-
-    .wp-nav a {
-      color: #004f9f;
-      text-decoration: none;
       font-weight: 600;
-      padding-bottom: 2px;
-      border-bottom: 2px solid transparent;
+      color: #111827;
+      text-decoration:none;
+    }
+    .btn:hover{ background:#e5e7eb; }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px 16px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
     }
 
-    .wp-nav a:hover {
-      text-decoration: underline;
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap: 8px;
     }
 
-    /* Active-link highlighting (nav bar) */
-    .wp-nav a.active {
-      border-bottom-color: #004f9f;
-      text-decoration: none;
+    #calendar{
+      background: var(--card);
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.02);
     }
 
-    .wp-nav .divider {
-      color: #666;
-      margin: 0 6px;
+    /* ===== Hover behaviour fix (list view) ===== */
+    .fc .fc-list-event:hover td{
+      background: var(--emerge-mint-soft) !important;
+    }
+    .fc .fc-list-event:hover .fc-list-event-title a,
+    .fc .fc-list-event:hover .fc-list-event-title,
+    .fc .fc-list-event:hover .fc-list-event-time{
+      color: var(--text) !important;
+      opacity: 1 !important;
+    }
+    .fc .fc-list-event-title a{ color: var(--text); text-decoration:none; }
+    .fc .fc-list-event-title a:hover{ text-decoration:underline; }
+
+    /* ===== Source-based colouring ===== */
+    .fc-event.src-wp1, .fc-daygrid-event.src-wp1, .fc-list-event.src-wp1 { background:#1f4e99 !important; border-color:#1f4e99 !important; color:#fff !important; }
+    .fc-event.src-wp2, .fc-daygrid-event.src-wp2, .fc-list-event.src-wp2 { background:#6b21a8 !important; border-color:#6b21a8 !important; color:#fff !important; }
+    .fc-event.src-wp3, .fc-daygrid-event.src-wp3, .fc-list-event.src-wp3 { background:#0f766e !important; border-color:#0f766e !important; color:#fff !important; }
+    .fc-event.src-wp4, .fc-daygrid-event.src-wp4, .fc-list-event.src-wp4 { background:#b45309 !important; border-color:#b45309 !important; color:#fff !important; }
+    .fc-event.src-wp5, .fc-daygrid-event.src-wp5, .fc-list-event.src-wp5 { background:#0f172a !important; border-color:#0f172a !important; color:#fff !important; }
+    .fc-event.src-wp6, .fc-daygrid-event.src-wp6, .fc-list-event.src-wp6 { background:#1d4ed8 !important; border-color:#1d4ed8 !important; color:#fff !important; }
+    .fc-event.src-wp7, .fc-daygrid-event.src-wp7, .fc-list-event.src-wp7 { background:#be123c !important; border-color:#be123c !important; color:#fff !important; }
+    .fc-event.src-wp8, .fc-daygrid-event.src-wp8, .fc-list-event.src-wp8 { background:#2e7d32 !important; border-color:#2e7d32 !important; color:#fff !important; }
+    .fc-event.src-wp9, .fc-daygrid-event.src-wp9, .fc-list-event.src-wp9 { background:#374151 !important; border-color:#374151 !important; color:#fff !important; }
+
+    /* Holidays (mint) */
+    .fc-event.src-holidays, .fc-daygrid-event.src-holidays, .fc-list-event.src-holidays{
+      background: var(--emerge-mint) !important;
+      border-color: #52b69a !important;
+      color: #0b3b33 !important;
       font-weight: 600;
     }
+    .fc .fc-list-event.src-holidays .fc-list-event-title a{ color:#0b3b33 !important; }
 
-    /* Make custom timeline link look like FullCalendar buttons */
-    .fc .fc-toolbar .fc-button.fc-timeline-link {
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    /* ========= CATEGORY COLOURING FOR EVENTS =========
-       These depend on the [Label] prefix in SUMMARY,
-       e.g. [Deliverable] Some title
-    */
-
-    /* Deliverable – teal */
-    .fc-event.cat-deliverable,
-    .fc-daygrid-event.cat-deliverable,
-    .fc-list-event.cat-deliverable {
-      background-color: #009688 !important;
-      border-color: #009688 !important;
-      color: #ffffff !important;
-    }
-
-    /* Milestone – amber */
-    .fc-event.cat-milestone,
-    .fc-daygrid-event.cat-milestone,
-    .fc-list-event.cat-milestone {
-      background-color: #ffb300 !important;
-      border-color: #ffb300 !important;
-      color: #000000 !important;
-    }
-
-    /* Meeting – green */
-    .fc-event.cat-meeting,
-    .fc-daygrid-event.cat-meeting,
-    .fc-list-event.cat-meeting {
-      background-color: #2e7d32 !important;
-      border-color: #2e7d32 !important;
-      color: #ffffff !important;
-    }
-
-    /* Task – purple */
-    .fc-event.cat-task,
-    .fc-daygrid-event.cat-task,
-    .fc-list-event.cat-task {
-      background-color: #6a1b9a !important;
-      border-color: #6a1b9a !important;
-      color: #ffffff !important;
-    }
-
-    /* Event – red */
-    .fc-event.cat-event,
-    .fc-daygrid-event.cat-event,
-    .fc-list-event.cat-event {
-      background-color: #c62828 !important;
-      border-color: #c62828 !important;
-      color: #ffffff !important;
-    }
-
-    /* Project Task – deep orange */
-    .fc-event.cat-project-task,
-    .fc-daygrid-event.cat-project-task,
-    .fc-list-event.cat-project-task {
-      background-color: #ef6c00 !important;
-      border-color: #ef6c00 !important;
-      color: #ffffff !important;
-    }
-
-    /* Other – grey */
-    .fc-event.cat-other,
-    .fc-daygrid-event.cat-other,
-    .fc-list-event.cat-other {
-      background-color: #607d8b !important;
-      border-color: #607d8b !important;
-      color: #ffffff !important;
-    }
-
-    @media (max-width: 600px) {
-      .header-text h1 {
-        font-size: 1.1rem;
-      }
+    @media (max-width:600px){
+      .header-text h1{ font-size:1.1rem; }
     }
   </style>
 </head>
 
 <body>
-
 <header>
   <div class="header-container">
-    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png"
-         alt="EMERGE Logo"
-         class="header-logo" />
-
+    <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png" alt="EMERGE Logo" class="header-logo" />
     <div class="header-text">
-      <h1>EMERGE – WP1 Calendar</h1>
-      <p>Key meetings and milestones for Work Package 1</p>
+      <h1>EMERGE Calendar Hub</h1>
+      <p>Toggle Work Packages and partner holidays (ICS feeds)</p>
     </div>
   </div>
 </header>
 
-<nav class="wp-nav">
-  <a href="WP1.html">WP1</a>
-  <a href="WP2.html">WP2</a>
-  <a href="WP3.html">WP3</a>
-  <a href="WP4.html">WP4</a>
-  <a href="WP5.html">WP5</a>
-  <a href="WP6.html">WP6</a>
-  <a href="WP7.html">WP7</a>
-  <a href="WP8.html">WP8</a>
-  <a href="WP9.html">WP9</a>
-
-  <span class="divider">|</span>
-
-  <a href="events.html">Events Calendar</a>
-  <a href="meetings.html">Meetings Calendar</a>
-  <a href="meetings-events.html">Meetings &amp; Events</a>
-  <a href="all.html">All Calendar</a>
-
-</nav>
-
 <main>
-  <div id="status">Loading WP1 calendar…</div>
+  <div id="status">Loading…</div>
+
+  <div class="card">
+    <div class="controls">
+      <div class="toggles" id="toggles"></div>
+      <div class="actions">
+        <button class="btn" id="selectAllBtn" type="button">Select all</button>
+        <button class="btn" id="selectNoneBtn" type="button">Select none</button>
+        <button class="btn" id="copyLinkBtn" type="button">Copy link</button>
+      </div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+  </div>
+
   <div id="calendar"></div>
 </main>
 
-<!-- Event detail modal -->
-<div id="eventModalBackdrop" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalTitle"></h2>
-      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <p><span class="label">When:</span> <span id="modalWhen"></span></p>
-      <p><span class="label">Location:</span> <span id="modalLocation"></span></p>
-      <p><span class="label">Description:</span></p>
-      <p id="modalDescription"></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" id="modalOkBtn">Close</button>
-    </div>
-  </div>
-</div>
-
 <script>
-  // WP1 ICS URL (confirmed by you)
-  const ICS_URL = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/holidays.ics';
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  const BASE_ICS = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
 
-  // Very small iCalendar (ICS) parser -> FullCalendar events
+  const SOURCES = [
+    { key: 'wp1', label: 'WP1', url: BASE_ICS + 'wp1.ics', className: 'src-wp1', color: '#1f4e99' },
+    { key: 'wp2', label: 'WP2', url: BASE_ICS + 'wp2.ics', className: 'src-wp2', color: '#6b21a8' },
+    { key: 'wp3', label: 'WP3', url: BASE_ICS + 'wp3.ics', className: 'src-wp3', color: '#0f766e' },
+    { key: 'wp4', label: 'WP4', url: BASE_ICS + 'wp4.ics', className: 'src-wp4', color: '#b45309' },
+    { key: 'wp5', label: 'WP5', url: BASE_ICS + 'wp5.ics', className: 'src-wp5', color: '#0f172a' },
+    { key: 'wp6', label: 'WP6', url: BASE_ICS + 'wp6.ics', className: 'src-wp6', color: '#1d4ed8' },
+    { key: 'wp7', label: 'WP7', url: BASE_ICS + 'wp7.ics', className: 'src-wp7', color: '#be123c' },
+    { key: 'wp8', label: 'WP8', url: BASE_ICS + 'wp8.ics', className: 'src-wp8', color: '#2e7d32' },
+    { key: 'wp9', label: 'WP9', url: BASE_ICS + 'wp9.ics', className: 'src-wp9', color: '#374151' },
+    { key: 'holidays', label: 'Holidays', url: BASE_ICS + 'holidays.ics', className: 'src-holidays', color: '#bfeee6' }
+  ];
+
+  const STORAGE_KEY = 'emergeCalendarHubSelection_v1';
+
+  // ============================================================
+  // ICS PARSER (simple, good enough for planner-style ICS)
+  // ============================================================
   function parseICS(icsText) {
     const rawLines = icsText.split(/\r?\n/);
     const lines = [];
-    // Unfold lines (handle lines that start with space / tab)
-    for (let i = 0; i < rawLines.length; i++) {
-      const line = rawLines[i];
+
+    // Unfold lines
+    for (const line of rawLines) {
       if (!line) continue;
       if (line.startsWith(' ') || line.startsWith('\t')) {
-        if (lines.length > 0) {
-          lines[lines.length - 1] += line.slice(1);
-        }
+        if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
       } else {
         lines.push(line);
       }
@@ -352,46 +261,27 @@
     let current = null;
 
     for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) {
-        current = {};
-        continue;
-      }
-      if (line.startsWith('END:VEVENT')) {
-        if (current) vevents.push(current);
-        current = null;
-        continue;
-      }
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
+      if (line.startsWith('END:VEVENT')) { if (current) vevents.push(current); current = null; continue; }
       if (!current) continue;
 
       const parts = line.split(':');
       if (parts.length < 2) continue;
-      const value = parts.slice(1).join(':'); // in case ':' appears in description
+
+      const value = parts.slice(1).join(':');
       const keyWithParams = parts[0];
       const key = keyWithParams.split(';')[0].toUpperCase();
 
-      switch (key) {
-        case 'SUMMARY':
-          current.summary = value;
-          break;
-        case 'DESCRIPTION':
-          current.description = value.replace(/\\n/g, '\n');
-          break;
-        case 'LOCATION':
-          current.location = value;
-          break;
-        case 'DTSTART':
-          current.dtstart = value;
-          break;
-        case 'DTEND':
-          current.dtend = value;
-          break;
-        default:
-          break;
-      }
+      if (key === 'SUMMARY') current.summary = value;
+      if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
+      if (key === 'LOCATION') current.location = value;
+      if (key === 'DTSTART') current.dtstart = value;
+      if (key === 'DTEND') current.dtend = value;
     }
 
     function parseICSTime(v) {
       if (!v) return null;
+
       // All-day date (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
@@ -399,18 +289,17 @@
         const d = parseInt(v.slice(6,8), 10);
         return { date: new Date(Date.UTC(y, m, d)), allDay: true };
       }
-      // Date-time, optionally with Z
+
+      // Date-time (YYYYMMDDTHHMMSS[Z])
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
       const hh = parseInt(v.slice(9,11) || '0', 10);
       const mm = parseInt(v.slice(11,13) || '0', 10);
       const ss = parseInt(v.slice(13,15) || '0', 10);
-      if (v.endsWith('Z')) {
-        return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
-      } else {
-        return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
-      }
+
+      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
     }
 
     const events = vevents.map(ev => {
@@ -433,60 +322,126 @@
     return events.filter(e => e.start);
   }
 
-  function formatDateRange(start, end, allDay) {
-    if (!start) return 'Unknown';
-    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit' };
+  // ============================================================
+  // Selection state: URL presets -> localStorage -> default all-on
+  // URL format:
+  //   ?wps=wp1,wp3,wp7&holidays=off
+  //   ?wps=all&holidays=on
+  //   ?wps=none&holidays=off
+  // ============================================================
+  function getSelectionFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const wpsParam = params.get('wps');
+    const holidaysParam = params.get('holidays');
 
-    if (allDay) {
-      if (end) {
-        return start.toLocaleDateString(undefined, optionsDate) +
-               ' – ' +
-               end.toLocaleDateString(undefined, optionsDate);
+    if (wpsParam === null && holidaysParam === null) return null;
+
+    const selected = new Set();
+    const wpKeys = SOURCES.filter(s => s.key.startsWith('wp')).map(s => s.key);
+
+    // WPs
+    if (wpsParam) {
+      const norm = wpsParam.trim().toLowerCase();
+      if (norm === 'all') {
+        wpKeys.forEach(k => selected.add(k));
+      } else if (norm === 'none') {
+        // none selected
+      } else {
+        norm.split(',').map(x => x.trim()).filter(Boolean).forEach(k => selected.add(k));
       }
-      return start.toLocaleDateString(undefined, optionsDate) + ' (all day)';
     } else {
-      let text = start.toLocaleDateString(undefined, optionsDate) +
-                 ' ' +
-                 start.toLocaleTimeString(undefined, optionsTime);
-      if (end) {
-        text += ' – ' + end.toLocaleTimeString(undefined, optionsTime);
-      }
-      return text;
+      // default WPs on if not specified
+      wpKeys.forEach(k => selected.add(k));
+    }
+
+    // Holidays
+    const hol = (holidaysParam || 'on').toLowerCase();
+    if (hol === 'on' || hol === 'true' || hol === '1' || hol === 'yes') selected.add('holidays');
+
+    return selected;
+  }
+
+  function getSelectionFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || !Array.isArray(obj.selected)) return null;
+      return new Set(obj.selected);
+    } catch {
+      return null;
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
+  function saveSelectionToStorage(selectedSet) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      selected: Array.from(selectedSet),
+      savedAt: new Date().toISOString()
+    }));
+  }
+
+  function defaultSelection() {
+    return new Set(SOURCES.map(s => s.key));
+  }
+
+  // ============================================================
+  // UI: toggles + legend
+  // ============================================================
+  function renderLegend() {
+    const legendEl = document.getElementById('legend');
+    legendEl.innerHTML = '';
+    for (const src of SOURCES) {
+      const it = document.createElement('div');
+      it.className = 'legend-item';
+
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = src.color;
+
+      const txt = document.createElement('span');
+      txt.textContent = src.label;
+
+      it.appendChild(sw);
+      it.appendChild(txt);
+      legendEl.appendChild(it);
+    }
+  }
+
+  function renderToggles(selected) {
+    const togglesEl = document.getElementById('toggles');
+    togglesEl.innerHTML = '';
+
+    for (const src of SOURCES) {
+      const label = document.createElement('label');
+      label.className = 'toggle';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = selected.has(src.key);
+      cb.dataset.key = src.key;
+
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = src.color;
+
+      const txt = document.createElement('span');
+      txt.textContent = src.label;
+
+      label.appendChild(cb);
+      label.appendChild(sw);
+      label.appendChild(txt);
+
+      togglesEl.appendChild(label);
+    }
+  }
+
+  // ============================================================
+  // FullCalendar + toggling (cached per source)
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', async function() {
     const statusEl = document.getElementById('status');
 
-    // Active-link highlighting (nav bar)
-    const page = (window.location.pathname.split('/').pop() || '').toLowerCase();
-    document.querySelectorAll('.wp-nav a').forEach(a => {
-      const href = (a.getAttribute('href') || '').toLowerCase();
-      if (href === page) a.classList.add('active');
-    });
-
-    // Modal elements
-    const modalBackdrop = document.getElementById('eventModalBackdrop');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalWhen = document.getElementById('modalWhen');
-    const modalLocation = document.getElementById('modalLocation');
-    const modalDescription = document.getElementById('modalDescription');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const modalOkBtn = document.getElementById('modalOkBtn');
-
-    function closeModal() {
-      modalBackdrop.classList.remove('show');
-    }
-
-    modalCloseBtn.addEventListener('click', closeModal);
-    modalOkBtn.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', function(e) {
-      if (e.target === modalBackdrop) closeModal();
-    });
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
       initialView: 'listYear',
       headerToolbar: {
         left: 'prev,next today',
@@ -496,78 +451,145 @@
       views: {
         listYear: { buttonText: 'Year list' },
         multiMonthYear: { buttonText: 'Year grid' }
-      },
-
-      // Add a CSS class based on the [Label] in the event title
-      eventClassNames: function(info) {
-        const title = info.event.title || '';
-        const match = title.match(/^\[(.*?)\]/);
-        if (!match) return [];
-        const label = match[1].trim();
-        const safe = label.toLowerCase().replace(/\s+/g, '-');
-        return [ 'cat-' + safe ];
-      },
-
-      // Inject a "Timeline" button into the FullCalendar header (styled like native buttons)
-      viewDidMount: function() {
-        const toolbarRight = calendarEl.querySelector('.fc-toolbar-chunk:last-child');
-        if (!toolbarRight) return;
-
-        // Avoid duplicates on re-render
-        if (toolbarRight.querySelector('.fc-timeline-link')) return;
-
-        const a = document.createElement('a');
-        a.href = 'timeline-WP1.html';
-        a.className = 'fc-button fc-button-primary fc-timeline-link';
-        a.textContent = 'Timeline';
-        a.title = 'Open WP1 timeline view';
-
-        toolbarRight.appendChild(a);
-      },
-
-      eventClick: function(info) {
-        const desc = info.event.extendedProps.description || 'No description provided.';
-        const loc = info.event.extendedProps.location || 'Not specified';
-        const when = formatDateRange(info.event.start, info.event.end, info.event.allDay);
-
-        modalTitle.textContent = info.event.title;
-        modalWhen.textContent = when;
-        modalLocation.textContent = loc;
-        modalDescription.textContent = desc;
-
-        modalBackdrop.classList.add('show');
       }
     });
-
     calendar.render();
 
-    // Load ICS
-    statusEl.textContent = 'Loading WP1 calendar from ICS…';
+    renderLegend();
 
-    fetch(ICS_URL)
-      .then(function(response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.text();
-      })
-      .then(function(text) {
-        const events = parseICS(text);
-        calendar.addEventSource(events);
-        statusEl.textContent = 'WP1 calendar loaded (' + events.length + ' events).';
-      })
-      .catch(function(err) {
-        console.error('Error loading ICS:', err);
-        statusEl.textContent = 'Could not load WP1 calendar – please check the ICS URL or CORS settings.';
-        statusEl.classList.add('error');
+    const fromUrl = getSelectionFromUrl();
+    const fromStorage = getSelectionFromStorage();
+    const selected = fromUrl || fromStorage || defaultSelection();
+
+    // persist URL preset (so a later refresh keeps the same choices)
+    saveSelectionToStorage(selected);
+    renderToggles(selected);
+
+    const cache = new Map();            // key -> events[]
+    const activeSourceIds = new Map();  // key -> sourceId
+
+    function setError(msg) {
+      statusEl.textContent = msg;
+      statusEl.classList.add('error');
+    }
+    function clearError() {
+      statusEl.classList.remove('error');
+    }
+
+    async function fetchAndCache(key) {
+      if (cache.has(key)) return cache.get(key);
+
+      const src = SOURCES.find(s => s.key === key);
+      if (!src) throw new Error('Unknown source: ' + key);
+
+      const resp = await fetch(src.url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error(src.label + ': HTTP ' + resp.status);
+
+      const text = await resp.text();
+      const events = parseICS(text).map(e => {
+        const existing = Array.isArray(e.className) ? e.className : (e.className ? [e.className] : []);
+        return { ...e, className: existing.concat([src.className]) };
       });
+
+      cache.set(key, events);
+      return events;
+    }
+
+    function addSource(key, events) {
+      if (activeSourceIds.has(key)) return;
+
+      const id = 'src-' + key;
+      calendar.addEventSource({ id, events });
+      activeSourceIds.set(key, id);
+    }
+
+    function removeSource(key) {
+      const id = activeSourceIds.get(key);
+      if (!id) return;
+      const src = calendar.getEventSourceById(id);
+      if (src) src.remove();
+      activeSourceIds.delete(key);
+    }
+
+    function updateStatus() {
+      const parts = [];
+      for (const key of activeSourceIds.keys()) {
+        const label = (SOURCES.find(s => s.key === key)?.label) || key;
+        const n = (cache.get(key)?.length) || 0;
+        parts.push(label + ' (' + n + ')');
+      }
+      statusEl.textContent = parts.length ? ('Loaded: ' + parts.join(' + ') + '.') : 'No feeds selected.';
+    }
+
+    async function applySelection(nextSelected) {
+      clearError();
+      statusEl.textContent = 'Loading selected feeds…';
+
+      // Remove any that are now off
+      for (const key of Array.from(activeSourceIds.keys())) {
+        if (!nextSelected.has(key)) removeSource(key);
+      }
+
+      // Add any that are now on
+      for (const key of Array.from(nextSelected.keys())) {
+        if (activeSourceIds.has(key)) continue;
+        try {
+          const events = await fetchAndCache(key);
+          addSource(key, events);
+        } catch (e) {
+          console.error(e);
+          setError('One or more feeds failed to load (see console).');
+        }
+      }
+
+      updateStatus();
+      saveSelectionToStorage(nextSelected);
+    }
+
+    // Initial load
+    await applySelection(selected);
+
+    // UI events
+    document.getElementById('toggles').addEventListener('change', async () => {
+      const checks = Array.from(document.querySelectorAll('#toggles input[type="checkbox"]'));
+      const next = new Set(checks.filter(c => c.checked).map(c => c.dataset.key));
+      await applySelection(next);
+    });
+
+    document.getElementById('selectAllBtn').addEventListener('click', async () => {
+      const next = new Set(SOURCES.map(s => s.key));
+      renderToggles(next);
+      await applySelection(next);
+    });
+
+    document.getElementById('selectNoneBtn').addEventListener('click', async () => {
+      const next = new Set();
+      renderToggles(next);
+      await applySelection(next);
+    });
+
+    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+      const sel = getSelectionFromStorage() || defaultSelection();
+
+      const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
+      const holidaysOn = sel.has('holidays');
+
+      const params = new URLSearchParams();
+      params.set('wps', wps.length ? wps.join(',') : 'none');
+      params.set('holidays', holidaysOn ? 'on' : 'off');
+
+      const url = window.location.origin + window.location.pathname + '?' + params.toString();
+
+      try {
+        await navigator.clipboard.writeText(url);
+        statusEl.textContent = 'Link copied: ' + url;
+        clearError();
+      } catch {
+        window.prompt('Copy this link:', url);
+      }
+    });
   });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
