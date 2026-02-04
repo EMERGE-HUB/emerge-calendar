@@ -12,6 +12,8 @@
       --emerge-blue:#004f9f;
       --emerge-mint:#bfeee6;
       --emerge-mint-soft:#e6faf6;
+      --weekend:#f0f2f5;
+
       --text:#111827;
       --muted:#4b5563;
       --card:#ffffff;
@@ -148,7 +150,15 @@
     .fc .fc-list-event-title a{ color: var(--text); text-decoration:none; }
     .fc .fc-list-event-title a:hover{ text-decoration:underline; }
 
-    /* ===== Source-based colouring ===== */
+    /* Make FullCalendar toolbar "Timeline" look like native button */
+    .fc .fc-toolbar .fc-button.fc-timeline-link{
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+    }
+
+    /* ===== Source-based colouring (foreground WP events) ===== */
     .fc-event.src-wp1, .fc-daygrid-event.src-wp1, .fc-list-event.src-wp1 { background:#1f4e99 !important; border-color:#1f4e99 !important; color:#fff !important; }
     .fc-event.src-wp2, .fc-daygrid-event.src-wp2, .fc-list-event.src-wp2 { background:#6b21a8 !important; border-color:#6b21a8 !important; color:#fff !important; }
     .fc-event.src-wp3, .fc-daygrid-event.src-wp3, .fc-list-event.src-wp3 { background:#0f766e !important; border-color:#0f766e !important; color:#fff !important; }
@@ -159,22 +169,8 @@
     .fc-event.src-wp8, .fc-daygrid-event.src-wp8, .fc-list-event.src-wp8 { background:#2e7d32 !important; border-color:#2e7d32 !important; color:#fff !important; }
     .fc-event.src-wp9, .fc-daygrid-event.src-wp9, .fc-list-event.src-wp9 { background:#374151 !important; border-color:#374151 !important; color:#fff !important; }
 
-    /* Holidays (mint) */
-    .fc-event.src-holidays, .fc-daygrid-event.src-holidays, .fc-list-event.src-holidays{
-      background: var(--emerge-mint) !important;
-      border-color: #52b69a !important;
-      color: #0b3b33 !important;
-      font-weight: 600;
-    }
-    .fc .fc-list-event.src-holidays .fc-list-event-title a{ color:#0b3b33 !important; }
-
-    /* ===== List view readability fix =====
-       FullCalendar list view colours are painted on <td>, so style the cells and force text/link colour to inherit.
-    */
-    .fc .fc-list-event td{
-      color: inherit !important;
-    }
-
+    /* ===== List view readability fix ===== */
+    .fc .fc-list-event td{ color: inherit !important; }
     .fc .fc-list-event .fc-list-event-title,
     .fc .fc-list-event .fc-list-event-title a,
     .fc .fc-list-event .fc-list-event-time{
@@ -182,7 +178,7 @@
       opacity: 1 !important;
     }
 
-    /* WPs: dark backgrounds => white text in list view */
+    /* Dark WPs => white text */
     .fc .fc-list-event.src-wp1 td,
     .fc .fc-list-event.src-wp2 td,
     .fc .fc-list-event.src-wp3 td,
@@ -195,7 +191,7 @@
       color:#fff !important;
     }
 
-    /* Apply the same backgrounds to list cells (matches your event colours) */
+    /* Match list-row backgrounds to WP colours */
     .fc .fc-list-event.src-wp1 td{ background:#1f4e99 !important; border-color:#1f4e99 !important; }
     .fc .fc-list-event.src-wp2 td{ background:#6b21a8 !important; border-color:#6b21a8 !important; }
     .fc .fc-list-event.src-wp3 td{ background:#0f766e !important; border-color:#0f766e !important; }
@@ -206,12 +202,9 @@
     .fc .fc-list-event.src-wp8 td{ background:#2e7d32 !important; border-color:#2e7d32 !important; }
     .fc .fc-list-event.src-wp9 td{ background:#374151 !important; border-color:#374151 !important; }
 
-    /* Holidays: mint background => dark text */
-    .fc .fc-list-event.src-holidays td{
-      background: var(--emerge-mint) !important;
-      border-color: #52b69a !important;
-      color: #0b3b33 !important;
-      font-weight: 600;
+    /* Background shading entries are handled by FullCalendar, but we keep this tidy */
+    .fc .fc-bg-event{
+      opacity: 1 !important;
     }
 
     @media (max-width:600px){
@@ -226,7 +219,7 @@
     <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png" alt="EMERGE Logo" class="header-logo" />
     <div class="header-text">
       <h1>EMERGE Calendar Hub</h1>
-      <p>Toggle Work Packages and partner holidays (ICS feeds)</p>
+      <p>Toggle Work Packages + shaded weekends + shaded partner holidays</p>
     </div>
   </div>
 </header>
@@ -254,20 +247,29 @@
   // ============================================================
   const BASE_ICS = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
 
+  // Toggleable sources:
+  // - WPs: foreground events from ICS
+  // - Holidays: background shading from ICS
+  // - Weekends: recurring background shading (no ICS required)
   const SOURCES = [
-    { key: 'wp1', label: 'WP1', url: BASE_ICS + 'wp1.ics', className: 'src-wp1', color: '#1f4e99' },
-    { key: 'wp2', label: 'WP2', url: BASE_ICS + 'wp2.ics', className: 'src-wp2', color: '#6b21a8' },
-    { key: 'wp3', label: 'WP3', url: BASE_ICS + 'wp3.ics', className: 'src-wp3', color: '#0f766e' },
-    { key: 'wp4', label: 'WP4', url: BASE_ICS + 'wp4.ics', className: 'src-wp4', color: '#b45309' },
-    { key: 'wp5', label: 'WP5', url: BASE_ICS + 'wp5.ics', className: 'src-wp5', color: '#0f172a' },
-    { key: 'wp6', label: 'WP6', url: BASE_ICS + 'wp6.ics', className: 'src-wp6', color: '#1d4ed8' },
-    { key: 'wp7', label: 'WP7', url: BASE_ICS + 'wp7.ics', className: 'src-wp7', color: '#be123c' },
-    { key: 'wp8', label: 'WP8', url: BASE_ICS + 'wp8.ics', className: 'src-wp8', color: '#2e7d32' },
-    { key: 'wp9', label: 'WP9', url: BASE_ICS + 'wp9.ics', className: 'src-wp9', color: '#374151' },
-    { key: 'holidays', label: 'Holidays', url: BASE_ICS + 'holidays.ics', className: 'src-holidays', color: '#bfeee6' }
+    { key: 'wp1', label: 'WP1', url: BASE_ICS + 'wp1.ics', className: 'src-wp1', color: '#1f4e99', kind: 'ics' },
+    { key: 'wp2', label: 'WP2', url: BASE_ICS + 'wp2.ics', className: 'src-wp2', color: '#6b21a8', kind: 'ics' },
+    { key: 'wp3', label: 'WP3', url: BASE_ICS + 'wp3.ics', className: 'src-wp3', color: '#0f766e', kind: 'ics' },
+    { key: 'wp4', label: 'WP4', url: BASE_ICS + 'wp4.ics', className: 'src-wp4', color: '#b45309', kind: 'ics' },
+    { key: 'wp5', label: 'WP5', url: BASE_ICS + 'wp5.ics', className: 'src-wp5', color: '#0f172a', kind: 'ics' },
+    { key: 'wp6', label: 'WP6', url: BASE_ICS + 'wp6.ics', className: 'src-wp6', color: '#1d4ed8', kind: 'ics' },
+    { key: 'wp7', label: 'WP7', url: BASE_ICS + 'wp7.ics', className: 'src-wp7', color: '#be123c', kind: 'ics' },
+    { key: 'wp8', label: 'WP8', url: BASE_ICS + 'wp8.ics', className: 'src-wp8', color: '#2e7d32', kind: 'ics' },
+    { key: 'wp9', label: 'WP9', url: BASE_ICS + 'wp9.ics', className: 'src-wp9', color: '#374151', kind: 'ics' },
+
+    // Structural shading
+    { key: 'weekends', label: 'Weekends', color: getComputedStyle(document.documentElement).getPropertyValue('--weekend').trim() || '#f0f2f5', kind: 'weekends' },
+
+    // Holiday shading from ICS (background)
+    { key: 'holidays', label: 'Holidays', url: BASE_ICS + 'holidays.ics', color: getComputedStyle(document.documentElement).getPropertyValue('--emerge-mint').trim() || '#bfeee6', kind: 'holidays' }
   ];
 
-  const STORAGE_KEY = 'emergeCalendarHubSelection_v1';
+  const STORAGE_KEY = 'emergeCalendarHubSelection_v2';
 
   // ============================================================
   // ICS PARSER (simple, good enough for planner-style ICS)
@@ -354,16 +356,17 @@
   // ============================================================
   // Selection state: URL presets -> localStorage -> default all-on
   // URL format:
-  //   ?wps=wp1,wp3,wp7&holidays=off
-  //   ?wps=all&holidays=on
-  //   ?wps=none&holidays=off
+  //   ?wps=wp1,wp3,wp7&holidays=off&weekends=on
+  //   ?wps=all&holidays=on&weekends=on
+  //   ?wps=none&holidays=off&weekends=off
   // ============================================================
   function getSelectionFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const wpsParam = params.get('wps');
     const holidaysParam = params.get('holidays');
+    const weekendsParam = params.get('weekends');
 
-    if (wpsParam === null && holidaysParam === null) return null;
+    if (wpsParam === null && holidaysParam === null && weekendsParam === null) return null;
 
     const selected = new Set();
     const wpKeys = SOURCES.filter(s => s.key.startsWith('wp')).map(s => s.key);
@@ -374,18 +377,21 @@
       if (norm === 'all') {
         wpKeys.forEach(k => selected.add(k));
       } else if (norm === 'none') {
-        // none selected
+        // none
       } else {
         norm.split(',').map(x => x.trim()).filter(Boolean).forEach(k => selected.add(k));
       }
     } else {
-      // default WPs on if not specified
       wpKeys.forEach(k => selected.add(k));
     }
 
     // Holidays
     const hol = (holidaysParam || 'on').toLowerCase();
     if (hol === 'on' || hol === 'true' || hol === '1' || hol === 'yes') selected.add('holidays');
+
+    // Weekends
+    const wek = (weekendsParam || 'on').toLowerCase();
+    if (wek === 'on' || wek === 'true' || wek === '1' || wek === 'yes') selected.add('weekends');
 
     return selected;
   }
@@ -410,6 +416,7 @@
   }
 
   function defaultSelection() {
+    // Default: all WPs + weekends + holidays on
     return new Set(SOURCES.map(s => s.key));
   }
 
@@ -449,21 +456,31 @@
   // ============================================================
   document.addEventListener('DOMContentLoaded', async function() {
     const statusEl = document.getElementById('status');
+    const calendarEl = document.getElementById('calendar');
 
-    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+    function setError(msg) {
+      statusEl.textContent = msg;
+      statusEl.classList.add('error');
+    }
+    function clearError() {
+      statusEl.classList.remove('error');
+    }
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'listYear',
       customButtons: {
         timeline: {
           text: 'Timeline',
           click: function() {
-            // Pass current selection to timeline.html so it can render the same toggles/feeds
             const sel = getSelectionFromStorage() || defaultSelection();
             const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
             const holidaysOn = sel.has('holidays');
+            const weekendsOn = sel.has('weekends');
 
             const params = new URLSearchParams();
             params.set('wps', wps.length ? wps.join(',') : 'none');
             params.set('holidays', holidaysOn ? 'on' : 'off');
+            params.set('weekends', weekendsOn ? 'on' : 'off');
 
             window.location.href = 'timeline.html?' + params.toString();
           }
@@ -475,9 +492,6 @@
         right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,listYear,multiMonthYear,timeline'
       },
       views: {
-        dayGridMonth: { displayEventTime: false },
-        dayGridMonth: { displayEventTime: false
-      },
         listYear: { buttonText: 'Year list' },
         multiMonthYear: { buttonText: 'Year grid' }
       }
@@ -488,45 +502,71 @@
     const fromStorage = getSelectionFromStorage();
     const selected = fromUrl || fromStorage || defaultSelection();
 
-    // persist URL preset (so a later refresh keeps the same choices)
+    // persist URL preset (so refresh keeps the same choices)
     saveSelectionToStorage(selected);
     renderToggles(selected);
 
-    const cache = new Map();            // key -> events[]
+    const cache = new Map();            // key -> events[] (ICS only)
     const activeSourceIds = new Map();  // key -> sourceId
 
-    function setError(msg) {
-      statusEl.textContent = msg;
-      statusEl.classList.add('error');
-    }
-    function clearError() {
-      statusEl.classList.remove('error');
-    }
-
-    async function fetchAndCache(key) {
+    async function fetchAndCacheIcs(key) {
       if (cache.has(key)) return cache.get(key);
 
       const src = SOURCES.find(s => s.key === key);
-      if (!src) throw new Error('Unknown source: ' + key);
+      if (!src || !src.url) throw new Error('Unknown ICS source: ' + key);
 
       const resp = await fetch(src.url, { cache: 'no-store' });
       if (!resp.ok) throw new Error(src.label + ': HTTP ' + resp.status);
 
       const text = await resp.text();
-      const events = parseICS(text).map(e => {
-        const existing = Array.isArray(e.className) ? e.className : (e.className ? [e.className] : []);
-        return { ...e, className: existing.concat([src.className]) };
-      });
+      const events = parseICS(text);
 
       cache.set(key, events);
       return events;
     }
 
-    function addSource(key, events) {
+    function addSource(key, srcDef, eventsOrNull) {
       if (activeSourceIds.has(key)) return;
 
       const id = 'src-' + key;
-      calendar.addEventSource({ id, events });
+
+      // Weekends: recurring background source
+      if (srcDef.kind === 'weekends') {
+        calendar.addEventSource({
+          id,
+          display: 'background',
+          daysOfWeek: [6, 0],               // Sat, Sun
+          backgroundColor: srcDef.color
+        });
+        activeSourceIds.set(key, id);
+        return;
+      }
+
+      // Holidays: background shading from ICS
+      if (srcDef.kind === 'holidays') {
+        const holidayEvents = (eventsOrNull || []).map(e => ({
+          start: e.start,
+          end: e.end,
+          allDay: true,
+          display: 'background',
+          backgroundColor: srcDef.color,
+          // Keep title in case you later decide to show labels; background events won't list anyway
+          title: e.title,
+          extendedProps: { isHoliday: true }
+        }));
+
+        calendar.addEventSource({ id, events: holidayEvents });
+        activeSourceIds.set(key, id);
+        return;
+      }
+
+      // WPs: normal foreground events from ICS
+      const wpEvents = (eventsOrNull || []).map(e => {
+        const existing = Array.isArray(e.className) ? e.className : (e.className ? [e.className] : []);
+        return { ...e, className: existing.concat([srcDef.className]) };
+      });
+
+      calendar.addEventSource({ id, events: wpEvents });
       activeSourceIds.set(key, id);
     }
 
@@ -541,9 +581,13 @@
     function updateStatus() {
       const parts = [];
       for (const key of activeSourceIds.keys()) {
-        const label = (SOURCES.find(s => s.key === key)?.label) || key;
-        const n = (cache.get(key)?.length) || 0;
-        parts.push(label + ' (' + n + ')');
+        const def = SOURCES.find(s => s.key === key);
+        const label = def ? def.label : key;
+
+        // For background sources, count is less meaningful; show cached count for ICS-based
+        const n = cache.get(key)?.length;
+        if (typeof n === 'number') parts.push(label + ' (' + n + ')');
+        else parts.push(label);
       }
       statusEl.textContent = parts.length ? ('Loaded: ' + parts.join(' + ') + '.') : 'No feeds selected.';
     }
@@ -552,17 +596,26 @@
       clearError();
       statusEl.textContent = 'Loading selected feeds…';
 
-      // Remove any that are now off
+      // Remove any now off
       for (const key of Array.from(activeSourceIds.keys())) {
         if (!nextSelected.has(key)) removeSource(key);
       }
 
-      // Add any that are now on
+      // Add any now on
       for (const key of Array.from(nextSelected.keys())) {
         if (activeSourceIds.has(key)) continue;
+
+        const def = SOURCES.find(s => s.key === key);
+        if (!def) continue;
+
         try {
-          const events = await fetchAndCache(key);
-          addSource(key, events);
+          if (def.kind === 'ics' || def.kind === 'holidays') {
+            const events = await fetchAndCacheIcs(key);
+            addSource(key, def, events);
+          } else {
+            // weekends
+            addSource(key, def, null);
+          }
         } catch (e) {
           console.error(e);
           setError('One or more feeds failed to load (see console).');
@@ -600,10 +653,12 @@
 
       const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
       const holidaysOn = sel.has('holidays');
+      const weekendsOn = sel.has('weekends');
 
       const params = new URLSearchParams();
       params.set('wps', wps.length ? wps.join(',') : 'none');
       params.set('holidays', holidaysOn ? 'on' : 'off');
+      params.set('weekends', weekendsOn ? 'on' : 'off');
 
       const url = window.location.origin + window.location.pathname + '?' + params.toString();
 
