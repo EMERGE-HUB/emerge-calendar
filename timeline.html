@@ -14,6 +14,10 @@
   <script src="/vendor/vis-timeline-graph2d.min.js"></script>
 
   <style>
+    :root{
+      --weekend:#f0f2f5;
+    }
+
     body { margin:0; padding:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f7fb; color:#222; }
 
     header { background:#004f9f; color:#fff; padding:16px 24px; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
@@ -63,6 +67,15 @@
     .swatch { width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,0.25); display:inline-block; }
 
     #timeline { height:calc(100vh - 300px); min-height:520px; width:100%; border:1px solid #e6e8ef; border-radius:8px; }
+
+    /* Weekend shading background items (only when zoomed in; generated in JS) */
+    .vis-item.weekend-bg{
+      background: var(--weekend) !important;
+      border: none !important;
+      border-radius: 0 !important;
+      opacity: 1 !important;
+      z-index: 0 !important;
+    }
 
     /* Modal */
     .modal-backdrop {
@@ -380,6 +393,84 @@
     FEEDS.forEach(f => groups.update({ id: f.id, visible: !!toggleState[f.id] }));
   }
 
+  // ---------------------------
+  // Weekend shading (only when zoomed in)
+  // ---------------------------
+  const WEEKEND_COLOR = getComputedStyle(document.documentElement)
+    .getPropertyValue('--weekend').trim() || '#f0f2f5';
+
+  // Show weekend shading only when window span is <= this many days
+  const WEEKEND_MAX_DAYS_VISIBLE = 90; // adjust if you want earlier/later
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function daysBetween(a, b) {
+    return Math.abs(b - a) / (1000 * 60 * 60 * 24);
+  }
+
+  function buildWeekendBackgroundItems(rangeStart, rangeEnd) {
+    const out = [];
+    const start = startOfDay(rangeStart);
+    const end = startOfDay(rangeEnd);
+
+    // Expand slightly to cover partial weeks at edges
+    start.setDate(start.getDate() - 7);
+    end.setDate(end.getDate() + 7);
+
+    // Find first Saturday on/after start
+    const first = new Date(start);
+    const day = first.getDay();                // 0 Sun ... 6 Sat
+    const daysUntilSat = (6 - day + 7) % 7;
+    first.setDate(first.getDate() + daysUntilSat);
+
+    let i = 0;
+    for (let d = new Date(first); d < end; d.setDate(d.getDate() + 7)) {
+      const satStart = new Date(d);
+      const monStart = new Date(d);
+      monStart.setDate(monStart.getDate() + 2); // Sat+Sun -> end Monday 00:00
+
+      out.push({
+        id: 'weekend-bg-' + (i++),
+        start: satStart,
+        end: monStart,
+        type: 'background',
+        className: 'weekend-bg',
+        style: `background-color:${WEEKEND_COLOR};border:none;`
+      });
+    }
+    return out;
+  }
+
+  function removeWeekendItems() {
+    const old = items.get({
+      filter: (it) => typeof it.id === 'string' && it.id.startsWith('weekend-bg-')
+    });
+    if (old.length) items.remove(old.map(o => o.id));
+  }
+
+  function refreshWeekendShading() {
+    const w = timeline.getWindow();
+    const spanDays = daysBetween(w.start, w.end);
+
+    // Zoomed out too far => no shading
+    if (spanDays > WEEKEND_MAX_DAYS_VISIBLE) {
+      removeWeekendItems();
+      timeline.redraw();
+      return;
+    }
+
+    // Zoomed in => rebuild shading for current window
+    removeWeekendItems();
+    const bg = buildWeekendBackgroundItems(w.start, w.end);
+    items.add(bg);
+    timeline.redraw();
+  }
+
+  timeline.on('rangechange', refreshWeekendShading);
+  timeline.on('rangechanged', refreshWeekendShading);
+
   // Controls
   document.getElementById('zoomInBtn').addEventListener('click', () => {
     const range = timeline.getWindow();
@@ -403,6 +494,7 @@
 
   document.getElementById('yearBtn').addEventListener('click', () => {
     const now = new Date();
+    const y = now.getFullYear_professor?
     const y = now.getFullYear();
     timeline.setWindow(new Date(y, 0, 1), new Date(y, 11, 31, 23, 59, 59));
   });
@@ -555,6 +647,9 @@
     }
 
     if (total > 0) timeline.fit();
+
+    // Weekend shading only when zoomed in; sync with current window after fit/load
+    setTimeout(refreshWeekendShading, 0);
   }
 
   loadTimeline();
