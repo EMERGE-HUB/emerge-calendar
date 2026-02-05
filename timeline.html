@@ -1,5 +1,4 @@
-<!-- timeline.html (renamed from timeline-WP1.html)
-     NOTE: nav link points to index.html (not timeline-wp1) as requested -->
+<!-- timeline.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -26,7 +25,6 @@
     .header-text h1 { margin:0; font-size:1.3rem; }
     .header-text p { margin:4px 0 0; font-size:0.9rem; opacity:0.95; }
 
-    /* Minimal nav: link back to landing page */
     .wp-nav {
       background:#fff;
       padding:10px 20px;
@@ -68,7 +66,7 @@
 
     #timeline { height:calc(100vh - 300px); min-height:520px; width:100%; border:1px solid #e6e8ef; border-radius:8px; }
 
-    /* Weekend shading background items (only when zoomed in; generated in JS) */
+    /* Weekend shading background items (generated in JS, only on HOLIDAYS row) */
     .vis-item.weekend-bg{
       background: var(--weekend) !important;
       border: none !important;
@@ -118,7 +116,6 @@
 </header>
 
 <nav class="wp-nav">
-  <!-- Per request: link goes to index.html (not timeline-wp1) -->
   <a href="index.html" id="homeLink">Home</a>
   <a href="timeline.html" class="active">Timeline</a>
 </nav>
@@ -197,7 +194,6 @@
     return INDEX_URL + '?' + params.toString();
   }
 
-  // Keep the header Home link consistent with toggles too (nice UX)
   function updateHomeLinkHref() {
     const home = document.getElementById('homeLink');
     if (home) home.href = buildIndexUrlFromToggles();
@@ -304,12 +300,8 @@
   // ---------------------------
   function hexToRgb(hex) {
     const h = (hex || '').replace('#','').trim();
-    if (h.length === 3) {
-      return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
-    }
-    if (h.length === 6) {
-      return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
-    }
+    if (h.length === 3) return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+    if (h.length === 6) return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
     return { r:255, g:255, b:255 };
   }
 
@@ -353,9 +345,7 @@
       for (const k of Object.keys(base)) base[k] = false;
       show.forEach(id => { if (id in base) base[id] = true; });
     }
-    if (hide.length > 0) {
-      hide.forEach(id => { if (id in base) base[id] = false; });
-    }
+    if (hide.length > 0) hide.forEach(id => { if (id in base) base[id] = false; });
 
     return base;
   }
@@ -366,7 +356,6 @@
 
   const toggleState = loadToggleState();
 
-  // Back button: persist + go to index with show=...
   document.getElementById('backBtn').addEventListener('click', () => {
     saveToggleState(toggleState);
     window.location.href = buildIndexUrlFromToggles();
@@ -394,13 +383,13 @@
   }
 
   // ---------------------------
-  // Weekend shading (only when zoomed in)
+  // Weekend shading ONLY ON HOLIDAYS ROW, only when zoomed in
   // ---------------------------
   const WEEKEND_COLOR = getComputedStyle(document.documentElement)
     .getPropertyValue('--weekend').trim() || '#f0f2f5';
 
-  // Show weekend shading only when window span is <= this many days
-  const WEEKEND_MAX_DAYS_VISIBLE = 90; // adjust if you want earlier/later
+  const WEEKEND_MAX_DAYS_VISIBLE = 90; // show only when <= 90 days are visible
+  const WEEKEND_GROUP_ID = 'HOLIDAYS'; // shade weekends on Holidays row only
 
   function startOfDay(d) {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -432,7 +421,8 @@
       monStart.setDate(monStart.getDate() + 2); // Sat+Sun -> end Monday 00:00
 
       out.push({
-        id: 'weekend-bg-' + (i++),
+        id: `weekend-bg-${i++}`,
+        group: WEEKEND_GROUP_ID,
         start: satStart,
         end: monStart,
         type: 'background',
@@ -454,17 +444,14 @@
     const w = timeline.getWindow();
     const spanDays = daysBetween(w.start, w.end);
 
-    // Zoomed out too far => no shading
     if (spanDays > WEEKEND_MAX_DAYS_VISIBLE) {
       removeWeekendItems();
       timeline.redraw();
       return;
     }
 
-    // Zoomed in => rebuild shading for current window
     removeWeekendItems();
-    const bg = buildWeekendBackgroundItems(w.start, w.end);
-    items.add(bg);
+    items.add(buildWeekendBackgroundItems(w.start, w.end));
     timeline.redraw();
   }
 
@@ -494,7 +481,6 @@
 
   document.getElementById('yearBtn').addEventListener('click', () => {
     const now = new Date();
-    const y = now.getFullYear_professor?
     const y = now.getFullYear();
     timeline.setWindow(new Date(y, 0, 1), new Date(y, 11, 31, 23, 59, 59));
   });
@@ -590,7 +576,7 @@
   // Load feeds
   // ---------------------------
   async function loadFeed(feed) {
-    const resp = await fetch(feed.url);
+    const resp = await fetch(feed.url, { cache: 'no-store' });
     if (!resp.ok) throw new Error(feed.id + ' HTTP ' + resp.status);
 
     const text = await resp.text();
@@ -648,7 +634,7 @@
 
     if (total > 0) timeline.fit();
 
-    // Weekend shading only when zoomed in; sync with current window after fit/load
+    // Apply weekend shading for current window (if zoomed-in enough)
     setTimeout(refreshWeekendShading, 0);
   }
 
