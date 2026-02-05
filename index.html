@@ -12,6 +12,8 @@
       --emerge-blue:#004f9f;
       --emerge-mint:#bfeee6;
       --emerge-mint-soft:#e6faf6;
+
+      /* Weekend shading */
       --weekend:#f0f2f5;
 
       --text:#111827;
@@ -70,7 +72,6 @@
       font-size: 0.9rem;
       color: var(--muted);
     }
-
     #status.error{ color:#b00020; }
 
     .controls{
@@ -135,6 +136,31 @@
       padding: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    /* ===== Weekend shading (reliable, CSS-based) ===== */
+    /* Month grid & multi-month grids */
+    .fc .fc-daygrid-day.fc-day-sat,
+    .fc .fc-daygrid-day.fc-day-sun{
+      background: var(--weekend);
+    }
+
+    /* TimeGrid week/day columns */
+    .fc .fc-timegrid-col.fc-day-sat,
+    .fc .fc-timegrid-col.fc-day-sun{
+      background: var(--weekend);
+    }
+
+    /* All-day row cells in timeGrid */
+    .fc .fc-timegrid-col.fc-day-sat .fc-timegrid-col-frame,
+    .fc .fc-timegrid-col.fc-day-sun .fc-timegrid-col-frame{
+      background: var(--weekend);
+    }
+
+    /* MultiMonth (FullCalendar v6) sometimes uses different internal wrappers */
+    .fc .fc-multimonth-daygrid.fc-day-sat,
+    .fc .fc-multimonth-daygrid.fc-day-sun{
+      background: var(--weekend);
     }
 
     /* ===== Hover behaviour fix (list view) ===== */
@@ -202,7 +228,7 @@
     .fc .fc-list-event.src-wp8 td{ background:#2e7d32 !important; border-color:#2e7d32 !important; }
     .fc .fc-list-event.src-wp9 td{ background:#374151 !important; border-color:#374151 !important; }
 
-    /* Background shading entries are handled by FullCalendar, but we keep this tidy */
+    /* Background shading entries (holidays) */
     .fc .fc-bg-event{
       opacity: 1 !important;
     }
@@ -247,29 +273,28 @@
   // ============================================================
   const BASE_ICS = 'https://pub-577ff589d29c4ebe9d2ea393dcf228f1.r2.dev/';
 
-  // Toggleable sources:
-  // - WPs: foreground events from ICS
-  // - Holidays: background shading from ICS
-  // - Weekends: recurring background shading (no ICS required)
-  const SOURCES = [
-    { key: 'wp1', label: 'WP1', url: BASE_ICS + 'wp1.ics', className: 'src-wp1', color: '#1f4e99', kind: 'ics' },
-    { key: 'wp2', label: 'WP2', url: BASE_ICS + 'wp2.ics', className: 'src-wp2', color: '#6b21a8', kind: 'ics' },
-    { key: 'wp3', label: 'WP3', url: BASE_ICS + 'wp3.ics', className: 'src-wp3', color: '#0f766e', kind: 'ics' },
-    { key: 'wp4', label: 'WP4', url: BASE_ICS + 'wp4.ics', className: 'src-wp4', color: '#b45309', kind: 'ics' },
-    { key: 'wp5', label: 'WP5', url: BASE_ICS + 'wp5.ics', className: 'src-wp5', color: '#0f172a', kind: 'ics' },
-    { key: 'wp6', label: 'WP6', url: BASE_ICS + 'wp6.ics', className: 'src-wp6', color: '#1d4ed8', kind: 'ics' },
-    { key: 'wp7', label: 'WP7', url: BASE_ICS + 'wp7.ics', className: 'src-wp7', color: '#be123c', kind: 'ics' },
-    { key: 'wp8', label: 'WP8', url: BASE_ICS + 'wp8.ics', className: 'src-wp8', color: '#2e7d32', kind: 'ics' },
-    { key: 'wp9', label: 'WP9', url: BASE_ICS + 'wp9.ics', className: 'src-wp9', color: '#374151', kind: 'ics' },
-
-    // Structural shading
-    { key: 'weekends', label: 'Weekends', color: getComputedStyle(document.documentElement).getPropertyValue('--weekend').trim() || '#f0f2f5', kind: 'weekends' },
-
-    // Holiday shading from ICS (background)
-    { key: 'holidays', label: 'Holidays', url: BASE_ICS + 'holidays.ics', color: getComputedStyle(document.documentElement).getPropertyValue('--emerge-mint').trim() || '#bfeee6', kind: 'holidays' }
+  // Toggleable sources (ONLY WPs)
+  const WP_SOURCES = [
+    { key: 'wp1', label: 'WP1', url: BASE_ICS + 'wp1.ics', className: 'src-wp1', color: '#1f4e99' },
+    { key: 'wp2', label: 'WP2', url: BASE_ICS + 'wp2.ics', className: 'src-wp2', color: '#6b21a8' },
+    { key: 'wp3', label: 'WP3', url: BASE_ICS + 'wp3.ics', className: 'src-wp3', color: '#0f766e' },
+    { key: 'wp4', label: 'WP4', url: BASE_ICS + 'wp4.ics', className: 'src-wp4', color: '#b45309' },
+    { key: 'wp5', label: 'WP5', url: BASE_ICS + 'wp5.ics', className: 'src-wp5', color: '#0f172a' },
+    { key: 'wp6', label: 'WP6', url: BASE_ICS + 'wp6.ics', className: 'src-wp6', color: '#1d4ed8' },
+    { key: 'wp7', label: 'WP7', url: BASE_ICS + 'wp7.ics', className: 'src-wp7', color: '#be123c' },
+    { key: 'wp8', label: 'WP8', url: BASE_ICS + 'wp8.ics', className: 'src-wp8', color: '#2e7d32' },
+    { key: 'wp9', label: 'WP9', url: BASE_ICS + 'wp9.ics', className: 'src-wp9', color: '#374151' },
   ];
 
-  const STORAGE_KEY = 'emergeCalendarHubSelection_v2';
+  // Always-on background shading (NO tickbox)
+  const HOLIDAYS_SOURCE = {
+    key: 'holidays',
+    label: 'Holidays',
+    url: BASE_ICS + 'holidays.ics',
+    color: getComputedStyle(document.documentElement).getPropertyValue('--emerge-mint').trim() || '#bfeee6'
+  };
+
+  const STORAGE_KEY = 'emergeCalendarHubSelection_wpOnly_v1';
 
   // ============================================================
   // ICS PARSER (simple, good enough for planner-style ICS)
@@ -354,45 +379,28 @@
   }
 
   // ============================================================
-  // Selection state: URL presets -> localStorage -> default all-on
+  // Selection state: URL -> localStorage -> default all-on
   // URL format:
-  //   ?wps=wp1,wp3,wp7&holidays=off&weekends=on
-  //   ?wps=all&holidays=on&weekends=on
-  //   ?wps=none&holidays=off&weekends=off
+  //   ?wps=wp1,wp3,wp7
+  //   ?wps=all
+  //   ?wps=none
   // ============================================================
   function getSelectionFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const wpsParam = params.get('wps');
-    const holidaysParam = params.get('holidays');
-    const weekendsParam = params.get('weekends');
-
-    if (wpsParam === null && holidaysParam === null && weekendsParam === null) return null;
+    if (wpsParam === null) return null;
 
     const selected = new Set();
-    const wpKeys = SOURCES.filter(s => s.key.startsWith('wp')).map(s => s.key);
+    const wpKeys = WP_SOURCES.map(s => s.key);
 
-    // WPs
-    if (wpsParam) {
-      const norm = wpsParam.trim().toLowerCase();
-      if (norm === 'all') {
-        wpKeys.forEach(k => selected.add(k));
-      } else if (norm === 'none') {
-        // none
-      } else {
-        norm.split(',').map(x => x.trim()).filter(Boolean).forEach(k => selected.add(k));
-      }
-    } else {
+    const norm = wpsParam.trim().toLowerCase();
+    if (norm === 'all') {
       wpKeys.forEach(k => selected.add(k));
+    } else if (norm === 'none') {
+      // none
+    } else {
+      norm.split(',').map(x => x.trim()).filter(Boolean).forEach(k => selected.add(k));
     }
-
-    // Holidays
-    const hol = (holidaysParam || 'on').toLowerCase();
-    if (hol === 'on' || hol === 'true' || hol === '1' || hol === 'yes') selected.add('holidays');
-
-    // Weekends
-    const wek = (weekendsParam || 'on').toLowerCase();
-    if (wek === 'on' || wek === 'true' || wek === '1' || wek === 'yes') selected.add('weekends');
-
     return selected;
   }
 
@@ -416,18 +424,17 @@
   }
 
   function defaultSelection() {
-    // Default: all WPs + weekends + holidays on
-    return new Set(SOURCES.map(s => s.key));
+    return new Set(WP_SOURCES.map(s => s.key));
   }
 
   // ============================================================
-  // UI: toggles
+  // UI: toggles (WPs only)
   // ============================================================
   function renderToggles(selected) {
     const togglesEl = document.getElementById('toggles');
     togglesEl.innerHTML = '';
 
-    for (const src of SOURCES) {
+    for (const src of WP_SOURCES) {
       const label = document.createElement('label');
       label.className = 'toggle';
 
@@ -452,7 +459,7 @@
   }
 
   // ============================================================
-  // FullCalendar + toggling (cached per source)
+  // FullCalendar + sources
   // ============================================================
   document.addEventListener('DOMContentLoaded', async function() {
     const statusEl = document.getElementById('status');
@@ -473,14 +480,10 @@
           text: 'Timeline',
           click: function() {
             const sel = getSelectionFromStorage() || defaultSelection();
-            const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
-            const holidaysOn = sel.has('holidays');
-            const weekendsOn = sel.has('weekends');
+            const wps = Array.from(sel).sort();
 
             const params = new URLSearchParams();
             params.set('wps', wps.length ? wps.join(',') : 'none');
-            params.set('holidays', holidaysOn ? 'on' : 'off');
-            params.set('weekends', weekendsOn ? 'on' : 'off');
 
             window.location.href = 'timeline.html?' + params.toString();
           }
@@ -502,68 +505,32 @@
     const fromStorage = getSelectionFromStorage();
     const selected = fromUrl || fromStorage || defaultSelection();
 
-    // persist URL preset (so refresh keeps the same choices)
     saveSelectionToStorage(selected);
     renderToggles(selected);
 
-    const cache = new Map();            // key -> events[] (ICS only)
+    const cache = new Map();            // key -> events[]
     const activeSourceIds = new Map();  // key -> sourceId
 
-    async function fetchAndCacheIcs(key) {
-      if (cache.has(key)) return cache.get(key);
+    async function fetchAndCacheIcs(url, cacheKey) {
+      if (cache.has(cacheKey)) return cache.get(cacheKey);
 
-      const src = SOURCES.find(s => s.key === key);
-      if (!src || !src.url) throw new Error('Unknown ICS source: ' + key);
-
-      const resp = await fetch(src.url, { cache: 'no-store' });
-      if (!resp.ok) throw new Error(src.label + ': HTTP ' + resp.status);
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error(cacheKey + ': HTTP ' + resp.status);
 
       const text = await resp.text();
       const events = parseICS(text);
 
-      cache.set(key, events);
+      cache.set(cacheKey, events);
       return events;
     }
 
-    function addSource(key, srcDef, eventsOrNull) {
+    function addWpSource(key, def, events) {
       if (activeSourceIds.has(key)) return;
-
       const id = 'src-' + key;
 
-      // Weekends: recurring background source
-      if (srcDef.kind === 'weekends') {
-        calendar.addEventSource({
-          id,
-          display: 'background',
-          daysOfWeek: [6, 0],               // Sat, Sun
-          backgroundColor: srcDef.color
-        });
-        activeSourceIds.set(key, id);
-        return;
-      }
-
-      // Holidays: background shading from ICS
-      if (srcDef.kind === 'holidays') {
-        const holidayEvents = (eventsOrNull || []).map(e => ({
-          start: e.start,
-          end: e.end,
-          allDay: true,
-          display: 'background',
-          backgroundColor: srcDef.color,
-          // Keep title in case you later decide to show labels; background events won't list anyway
-          title: e.title,
-          extendedProps: { isHoliday: true }
-        }));
-
-        calendar.addEventSource({ id, events: holidayEvents });
-        activeSourceIds.set(key, id);
-        return;
-      }
-
-      // WPs: normal foreground events from ICS
-      const wpEvents = (eventsOrNull || []).map(e => {
+      const wpEvents = (events || []).map(e => {
         const existing = Array.isArray(e.className) ? e.className : (e.className ? [e.className] : []);
-        return { ...e, className: existing.concat([srcDef.className]) };
+        return { ...e, className: existing.concat([def.className]) };
       });
 
       calendar.addEventSource({ id, events: wpEvents });
@@ -579,46 +546,71 @@
     }
 
     function updateStatus() {
-      const parts = [];
+      const wpParts = [];
       for (const key of activeSourceIds.keys()) {
-        const def = SOURCES.find(s => s.key === key);
+        if (key === 'holidays') continue;
+        const def = WP_SOURCES.find(s => s.key === key);
         const label = def ? def.label : key;
-
-        // For background sources, count is less meaningful; show cached count for ICS-based
         const n = cache.get(key)?.length;
-        if (typeof n === 'number') parts.push(label + ' (' + n + ')');
-        else parts.push(label);
+        wpParts.push(typeof n === 'number' ? `${label} (${n})` : label);
       }
-      statusEl.textContent = parts.length ? ('Loaded: ' + parts.join(' + ') + '.') : 'No feeds selected.';
+
+      const holN = cache.get('holidays')?.length;
+      const holTxt = typeof holN === 'number' ? `Holidays (${holN})` : 'Holidays';
+
+      if (!wpParts.length) {
+        statusEl.textContent = `No WP feeds selected. ${holTxt} loaded in background.`;
+      } else {
+        statusEl.textContent = `Loaded: ${wpParts.join(' + ')}. ${holTxt} loaded in background.`;
+      }
+    }
+
+    async function loadHolidaysAlwaysOn() {
+      try {
+        const holEvents = await fetchAndCacheIcs(HOLIDAYS_SOURCE.url, 'holidays');
+
+        const bgEvents = holEvents.map(e => ({
+          start: e.start,
+          end: e.end,
+          allDay: true,
+          display: 'background',
+          backgroundColor: HOLIDAYS_SOURCE.color,
+          title: e.title,
+          extendedProps: { isHoliday: true }
+        }));
+
+        const id = 'src-holidays';
+        calendar.addEventSource({ id, events: bgEvents });
+        activeSourceIds.set('holidays', id);
+      } catch (e) {
+        console.error(e);
+        setError('Holidays feed failed to load (see console).');
+      }
     }
 
     async function applySelection(nextSelected) {
       clearError();
       statusEl.textContent = 'Loading selected feeds…';
 
-      // Remove any now off
+      // Remove WPs turned off
       for (const key of Array.from(activeSourceIds.keys())) {
+        if (key === 'holidays') continue;
         if (!nextSelected.has(key)) removeSource(key);
       }
 
-      // Add any now on
+      // Add WPs turned on
       for (const key of Array.from(nextSelected.keys())) {
         if (activeSourceIds.has(key)) continue;
 
-        const def = SOURCES.find(s => s.key === key);
+        const def = WP_SOURCES.find(s => s.key === key);
         if (!def) continue;
 
         try {
-          if (def.kind === 'ics' || def.kind === 'holidays') {
-            const events = await fetchAndCacheIcs(key);
-            addSource(key, def, events);
-          } else {
-            // weekends
-            addSource(key, def, null);
-          }
+          const events = await fetchAndCacheIcs(def.url, key);
+          addWpSource(key, def, events);
         } catch (e) {
           console.error(e);
-          setError('One or more feeds failed to load (see console).');
+          setError('One or more WP feeds failed to load (see console).');
         }
       }
 
@@ -626,7 +618,10 @@
       saveSelectionToStorage(nextSelected);
     }
 
-    // Initial load
+    // Always-on holidays first
+    await loadHolidaysAlwaysOn();
+
+    // Initial WP load
     await applySelection(selected);
 
     // UI events
@@ -637,7 +632,7 @@
     });
 
     document.getElementById('selectAllBtn').addEventListener('click', async () => {
-      const next = new Set(SOURCES.map(s => s.key));
+      const next = new Set(WP_SOURCES.map(s => s.key));
       renderToggles(next);
       await applySelection(next);
     });
@@ -650,15 +645,10 @@
 
     document.getElementById('copyLinkBtn').addEventListener('click', async () => {
       const sel = getSelectionFromStorage() || defaultSelection();
-
-      const wps = Array.from(sel).filter(k => k.startsWith('wp')).sort();
-      const holidaysOn = sel.has('holidays');
-      const weekendsOn = sel.has('weekends');
+      const wps = Array.from(sel).sort();
 
       const params = new URLSearchParams();
       params.set('wps', wps.length ? wps.join(',') : 'none');
-      params.set('holidays', holidaysOn ? 'on' : 'off');
-      params.set('weekends', weekendsOn ? 'on' : 'off');
 
       const url = window.location.origin + window.location.pathname + '?' + params.toString();
 
