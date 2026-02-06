@@ -139,25 +139,21 @@
     }
 
     /* ===== Weekend shading (reliable, CSS-based) ===== */
-    /* Month grid & multi-month grids */
     .fc .fc-daygrid-day.fc-day-sat,
     .fc .fc-daygrid-day.fc-day-sun{
       background: var(--weekend);
     }
 
-    /* TimeGrid week/day columns */
     .fc .fc-timegrid-col.fc-day-sat,
     .fc .fc-timegrid-col.fc-day-sun{
       background: var(--weekend);
     }
 
-    /* All-day row cells in timeGrid */
     .fc .fc-timegrid-col.fc-day-sat .fc-timegrid-col-frame,
     .fc .fc-timegrid-col.fc-day-sun .fc-timegrid-col-frame{
       background: var(--weekend);
     }
 
-    /* MultiMonth (FullCalendar v6) sometimes uses different internal wrappers */
     .fc .fc-multimonth-daygrid.fc-day-sat,
     .fc .fc-multimonth-daygrid.fc-day-sun{
       background: var(--weekend);
@@ -167,22 +163,8 @@
     .fc .fc-list-event:hover td{
       background: var(--emerge-mint-soft) !important;
     }
-    .fc .fc-list-event:hover .fc-list-event-title a,
-    .fc .fc-list-event:hover .fc-list-event-title,
-    .fc .fc-list-event:hover .fc-list-event-time{
-      color: var(--text) !important;
-      opacity: 1 !important;
-    }
     .fc .fc-list-event-title a{ color: var(--text); text-decoration:none; }
     .fc .fc-list-event-title a:hover{ text-decoration:underline; }
-
-    /* Make FullCalendar toolbar "Timeline" look like native button */
-    .fc .fc-toolbar .fc-button.fc-timeline-link{
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-    }
 
     /* ===== Source-based colouring (foreground WP events) ===== */
     .fc-event.src-wp1, .fc-daygrid-event.src-wp1, .fc-list-event.src-wp1 { background:#1f4e99 !important; border-color:#1f4e99 !important; color:#fff !important; }
@@ -195,27 +177,23 @@
     .fc-event.src-wp8, .fc-daygrid-event.src-wp8, .fc-list-event.src-wp8 { background:#2e7d32 !important; border-color:#2e7d32 !important; color:#fff !important; }
     .fc-event.src-wp9, .fc-daygrid-event.src-wp9, .fc-list-event.src-wp9 { background:#374151 !important; border-color:#374151 !important; color:#fff !important; }
 
-/* ===== List view readability fix (soft mint hover) ===== */
+    /* ===== List view readability fix (soft mint hover) ===== */
+    .fc .fc-list-event td,
+    .fc .fc-list-event .fc-list-event-title,
+    .fc .fc-list-event .fc-list-event-title a,
+    .fc .fc-list-event .fc-list-event-time{
+      color: inherit !important;
+      opacity: 1 !important;
+    }
 
-/* Default: inherit WP colour */
-.fc .fc-list-event td,
-.fc .fc-list-event .fc-list-event-title,
-.fc .fc-list-event .fc-list-event-title a,
-.fc .fc-list-event .fc-list-event-time{
-  color: inherit !important;
-  opacity: 1 !important;
-}
+    .fc .fc-list-event:hover td,
+    .fc .fc-list-event:hover .fc-list-event-title,
+    .fc .fc-list-event:hover .fc-list-event-title a,
+    .fc .fc-list-event:hover .fc-list-event-time{
+      color: var(--emerge-mint-soft) !important;
+    }
 
-/* Hover: brighten text for contrast */
-.fc .fc-list-event:hover td,
-.fc .fc-list-event:hover .fc-list-event-title,
-.fc .fc-list-event:hover .fc-list-event-title a,
-.fc .fc-list-event:hover .fc-list-event-time{
-  color: var(--emerge-mint-soft) !important;
-}
-
-
-    /* Dark WPs => white text */
+    /* Dark WPs => white text (non-hover baseline) */
     .fc .fc-list-event.src-wp1 td,
     .fc .fc-list-event.src-wp2 td,
     .fc .fc-list-event.src-wp3 td,
@@ -244,8 +222,10 @@
       opacity: 1 !important;
     }
 
-    @media (max-width:600px){
-      .header-text h1{ font-size:1.1rem; }
+    /* ===== Grid view: show time after title (muted) ===== */
+    .fc-event-time-inline{
+      opacity: 0.82;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -306,6 +286,25 @@
   };
 
   const STORAGE_KEY = 'emergeCalendarHubSelection_wpOnly_v1';
+
+  // ============================================================
+  // Grid view: put time after title (month + year grid)
+  // ============================================================
+  function gridEventContent(arg) {
+    // Only apply to dayGrid + multiMonth views
+    if (!arg.view.type.startsWith('dayGrid') && !arg.view.type.startsWith('multiMonth')) {
+      return true; // let FullCalendar render normally
+    }
+
+    const time = arg.timeText
+      ? `<span class="fc-event-time-inline"> ${arg.timeText}</span>`
+      : '';
+
+    // Use textContent-ish output via HTML (title is safe from our source, but keep simple)
+    return {
+      html: `<div class="fc-event-title">${arg.event.title}${time}</div>`
+    };
+  }
 
   // ============================================================
   // ICS PARSER (simple, good enough for planner-style ICS)
@@ -391,10 +390,6 @@
 
   // ============================================================
   // Selection state: URL -> localStorage -> default all-on
-  // URL format:
-  //   ?wps=wp1,wp3,wp7
-  //   ?wps=all
-  //   ?wps=none
   // ============================================================
   function getSelectionFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -508,8 +503,12 @@
       views: {
         listYear: { buttonText: 'Year list' },
         multiMonthYear: { buttonText: 'Year grid' }
-      }
+      },
+
+      // >>> KEY ADDITION: show time after title in month/year grid views
+      eventContent: gridEventContent
     });
+
     calendar.render();
 
     const fromUrl = getSelectionFromUrl();
@@ -676,4 +675,3 @@
 
 </body>
 </html>
-
