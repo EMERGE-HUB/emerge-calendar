@@ -12,182 +12,6 @@
   <script src="/vendor/vis-data.min.js"></script>
   <script src="/vendor/vis-timeline-graph2d.min.js"></script>
 
-<script>
-  // ============================================================
-  // ICS PARSER (adds basic RRULE expansion for FREQ=MONTHLY;UNTIL=...)
-  // ============================================================
-  function parseICS(icsText) {
-    const rawLines = icsText.split(/\r?\n/);
-    const lines = [];
-
-    // Unfold lines
-    for (const line of rawLines) {
-      if (!line) continue;
-      if (line.startsWith(' ') || line.startsWith('\t')) {
-        if (lines.length > 0) lines[lines.length - 1] += line.slice(1);
-      } else {
-        lines.push(line);
-      }
-    }
-
-    const vevents = [];
-    let current = null;
-
-    for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
-      if (line.startsWith('END:VEVENT')) { if (current) vevents.push(current); current = null; continue; }
-      if (!current) continue;
-
-      const parts = line.split(':');
-      if (parts.length < 2) continue;
-
-      const value = parts.slice(1).join(':');
-      const keyWithParams = parts[0];
-      const key = keyWithParams.split(';')[0].toUpperCase();
-
-      if (key === 'SUMMARY') current.summary = value;
-      if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
-      if (key === 'LOCATION') current.location = value;
-      if (key === 'DTSTART') current.dtstart = value;
-      if (key === 'DTEND') current.dtend = value;
-      if (key === 'RRULE') current.rrule = value; // <-- capture RRULE
-    }
-
-    function parseICSTime(v) {
-      if (!v) return null;
-
-      // All-day date (YYYYMMDD)
-      if (v.length === 8 && !v.includes('T')) {
-        const y = parseInt(v.slice(0,4), 10);
-        const m = parseInt(v.slice(4,6), 10) - 1;
-        const d = parseInt(v.slice(6,8), 10);
-        return { date: new Date(Date.UTC(y, m, d)), allDay: true, isUTC: true };
-      }
-
-      // Date-time (YYYYMMDDTHHMMSS[Z])
-      const y = parseInt(v.slice(0,4), 10);
-      const m = parseInt(v.slice(4,6), 10) - 1;
-      const d = parseInt(v.slice(6,8), 10);
-      const hh = parseInt(v.slice(9,11) || '0', 10);
-      const mm = parseInt(v.slice(11,13) || '0', 10);
-      const ss = parseInt(v.slice(13,15) || '0', 10);
-
-      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false, isUTC: true };
-      return { date: new Date(y, m, d, hh, mm, ss), allDay: false, isUTC: false };
-    }
-
-    function parseRRule(rruleStr) {
-      // e.g. "FREQ=MONTHLY;UNTIL=20291204T235959Z"
-      const out = {};
-      if (!rruleStr) return out;
-      rruleStr.split(';').forEach(part => {
-        const [k, v] = part.split('=');
-        if (!k || !v) return;
-        out[k.toUpperCase()] = v;
-      });
-      return out;
-    }
-
-    function addMonths(d, months, useUTC) {
-      // keep same clock time
-      const y = useUTC ? d.getUTCFullYear() : d.getFullYear();
-      const m = (useUTC ? d.getUTCMonth() : d.getMonth()) + months;
-      const day = useUTC ? d.getUTCDate() : d.getDate();
-      const hh = useUTC ? d.getUTCHours() : d.getHours();
-      const mm = useUTC ? d.getUTCMinutes() : d.getMinutes();
-      const ss = useUTC ? d.getUTCSeconds() : d.getSeconds();
-
-      if (useUTC) return new Date(Date.UTC(y, m, day, hh, mm, ss));
-      return new Date(y, m, day, hh, mm, ss);
-    }
-
-    function cloneWithShift(base, start, end, title, props) {
-      return {
-        title,
-        start,
-        end,
-        allDay: base.allDay,
-        extendedProps: props
-      };
-    }
-
-    // Build events (with RRULE expansion for MONTHLY)
-    const events = [];
-
-    for (const ev of vevents) {
-      const sp = parseICSTime(ev.dtstart);
-      const ep = parseICSTime(ev.dtend);
-      if (!sp || !sp.date) continue;
-
-      const base = {
-        title: ev.summary || '(no title)',
-        allDay: !!sp.allDay,
-        extendedProps: { description: ev.description || '', location: ev.location || '' }
-      };
-
-      const start0 = sp.date;
-      const end0 = ep && ep.date ? ep.date : null;
-      const useUTC = !!sp.isUTC; // DTSTART:...Z => use UTC maths
-
-      // No RRULE => single event
-      if (!ev.rrule) {
-        events.push({
-          title: base.title,
-          start: start0,
-          end: end0,
-          allDay: base.allDay,
-          extendedProps: base.extendedProps
-        });
-        continue;
-      }
-
-      // RRULE present => expand (MONTHLY only)
-      const rule = parseRRule(ev.rrule);
-      const freq = (rule.FREQ || '').toUpperCase();
-      if (freq !== 'MONTHLY') {
-        // fallback: include only base occurrence if unsupported
-        events.push({
-          title: base.title,
-          start: start0,
-          end: end0,
-          allDay: base.allDay,
-          extendedProps: base.extendedProps
-        });
-        continue;
-      }
-
-      const untilParsed = rule.UNTIL ? parseICSTime(rule.UNTIL) : null;
-      const until = untilParsed && untilParsed.date ? untilParsed.date : null;
-
-      // Safety cap to avoid runaway
-      const MAX_OCCURRENCES = 240; // 20 years monthly
-      let count = 0;
-
-      // duration in ms (for timed events)
-      const durMs = (end0 && !base.allDay) ? (end0.getTime() - start0.getTime()) : null;
-
-      for (let i = 0; i < MAX_OCCURRENCES; i++) {
-        const occStart = addMonths(start0, i, useUTC);
-        if (until && occStart.getTime() > until.getTime()) break;
-
-        let occEnd = null;
-        if (base.allDay) {
-          // all-day: keep DTEND as provided (often same day in your feeds)
-          occEnd = end0 ? addMonths(end0, i, useUTC) : null;
-        } else if (durMs !== null) {
-          occEnd = new Date(occStart.getTime() + durMs);
-        }
-
-        events.push(cloneWithShift(base, occStart, occEnd, base.title, base.extendedProps));
-        count++;
-      }
-    }
-
-    return events;
-  }
-</script>
-
-  
   <style>
     :root{
       --weekend:#f0f2f5;
@@ -358,6 +182,21 @@
   const STORAGE_KEY = 'emerge_timeline_toggles_v1';
   const INDEX_URL = 'index.html';
 
+  // ============================================================
+  // OPTION: show time after title in timeline labels
+  // ============================================================
+  const SHOW_TIME_IN_LABELS = true;   // <-- set false to disable
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function formatTimeForLabel(start, end, allDay) {
+    if (!start || allDay) return '';
+    const s = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
+    if (!end) return s;
+    const e = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+    return `${s}–${e}`;
+  }
+
   // ---------------------------
   // Return to index with current toggle state
   // ---------------------------
@@ -387,11 +226,13 @@
   }
 
   // ---------------------------
-  // ICS parsing
+  // ICS parsing (RRULE MONTHLY expansion)
   // ---------------------------
   function parseICS(icsText) {
     const rawLines = icsText.split(/\r?\n/);
     const lines = [];
+
+    // Unfold lines
     for (const line of rawLines) {
       if (!line) continue;
       if (line.startsWith(' ') || line.startsWith('\t')) {
@@ -411,26 +252,31 @@
 
       const parts = line.split(':');
       if (parts.length < 2) continue;
+
       const value = parts.slice(1).join(':');
-      const key = parts[0].split(';')[0].toUpperCase();
+      const keyWithParams = parts[0];
+      const key = keyWithParams.split(';')[0].toUpperCase();
 
       if (key === 'SUMMARY') current.summary = value;
       if (key === 'DESCRIPTION') current.description = value.replace(/\\n/g, '\n');
       if (key === 'LOCATION') current.location = value;
       if (key === 'DTSTART') current.dtstart = value;
       if (key === 'DTEND') current.dtend = value;
+      if (key === 'RRULE') current.rrule = value;
     }
 
     function parseICSTime(v) {
       if (!v) return null;
 
+      // All-day date (YYYYMMDD)
       if (v.length === 8 && !v.includes('T')) {
         const y = parseInt(v.slice(0,4), 10);
         const m = parseInt(v.slice(4,6), 10) - 1;
         const d = parseInt(v.slice(6,8), 10);
-        return { date: new Date(Date.UTC(y, m, d)), allDay: true };
+        return { date: new Date(Date.UTC(y, m, d)), allDay: true, isUTC: true };
       }
 
+      // Date-time (YYYYMMDDTHHMMSS[Z])
       const y = parseInt(v.slice(0,4), 10);
       const m = parseInt(v.slice(4,6), 10) - 1;
       const d = parseInt(v.slice(6,8), 10);
@@ -438,22 +284,105 @@
       const mm = parseInt(v.slice(11,13) || '0', 10);
       const ss = parseInt(v.slice(13,15) || '0', 10);
 
-      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false };
-      return { date: new Date(y, m, d, hh, mm, ss), allDay: false };
+      if (v.endsWith('Z')) return { date: new Date(Date.UTC(y, m, d, hh, mm, ss)), allDay: false, isUTC: true };
+      return { date: new Date(y, m, d, hh, mm, ss), allDay: false, isUTC: false };
     }
 
-    return vevents.map(ev => {
-      const startParsed = parseICSTime(ev.dtstart);
-      const endParsed = parseICSTime(ev.dtend);
-      return {
-        title: ev.summary || '(no title)',
-        start: startParsed ? startParsed.date : null,
-        end: endParsed ? endParsed.date : null,
-        allDay: startParsed ? startParsed.allDay : false,
-        description: ev.description || '',
-        location: ev.location || ''
-      };
-    }).filter(e => e.start);
+    function parseRRule(rruleStr) {
+      const out = {};
+      if (!rruleStr) return out;
+      rruleStr.split(';').forEach(part => {
+        const [k, v] = part.split('=');
+        if (!k || !v) return;
+        out[k.toUpperCase()] = v;
+      });
+      return out;
+    }
+
+    function addMonths(d, months, useUTC) {
+      const y = useUTC ? d.getUTCFullYear() : d.getFullYear();
+      const m = (useUTC ? d.getUTCMonth() : d.getMonth()) + months;
+      const day = useUTC ? d.getUTCDate() : d.getDate();
+      const hh = useUTC ? d.getUTCHours() : d.getHours();
+      const mm = useUTC ? d.getUTCMinutes() : d.getMinutes();
+      const ss = useUTC ? d.getUTCSeconds() : d.getSeconds();
+      if (useUTC) return new Date(Date.UTC(y, m, day, hh, mm, ss));
+      return new Date(y, m, day, hh, mm, ss);
+    }
+
+    const events = [];
+
+    for (const ev of vevents) {
+      const sp = parseICSTime(ev.dtstart);
+      const ep = parseICSTime(ev.dtend);
+      if (!sp || !sp.date) continue;
+
+      const baseTitle = ev.summary || '(no title)';
+      const baseAllDay = !!sp.allDay;
+      const baseDesc = ev.description || '';
+      const baseLoc  = ev.location || '';
+
+      const start0 = sp.date;
+      const end0 = (ep && ep.date) ? ep.date : null;
+      const useUTC = !!sp.isUTC;
+
+      // No RRULE -> single
+      if (!ev.rrule) {
+        events.push({
+          title: baseTitle,
+          start: start0,
+          end: end0,
+          allDay: baseAllDay,
+          description: baseDesc,
+          location: baseLoc
+        });
+        continue;
+      }
+
+      const rule = parseRRule(ev.rrule);
+      const freq = (rule.FREQ || '').toUpperCase();
+      if (freq !== 'MONTHLY') {
+        // unsupported -> include base only
+        events.push({
+          title: baseTitle,
+          start: start0,
+          end: end0,
+          allDay: baseAllDay,
+          description: baseDesc,
+          location: baseLoc
+        });
+        continue;
+      }
+
+      const untilParsed = rule.UNTIL ? parseICSTime(rule.UNTIL) : null;
+      const until = untilParsed && untilParsed.date ? untilParsed.date : null;
+
+      const MAX_OCCURRENCES = 240;
+      const durMs = (end0 && !baseAllDay) ? (end0.getTime() - start0.getTime()) : null;
+
+      for (let i = 0; i < MAX_OCCURRENCES; i++) {
+        const occStart = addMonths(start0, i, useUTC);
+        if (until && occStart.getTime() > until.getTime()) break;
+
+        let occEnd = null;
+        if (baseAllDay) {
+          occEnd = end0 ? addMonths(end0, i, useUTC) : null;
+        } else if (durMs !== null) {
+          occEnd = new Date(occStart.getTime() + durMs);
+        }
+
+        events.push({
+          title: baseTitle,
+          start: occStart,
+          end: occEnd,
+          allDay: baseAllDay,
+          description: baseDesc,
+          location: baseLoc
+        });
+      }
+    }
+
+    return events;
   }
 
   function formatDateRange(start, end, allDay) {
@@ -580,11 +509,9 @@
     const start = startOfDay(rangeStart);
     const end = startOfDay(rangeEnd);
 
-    // Expand slightly to cover partial weeks at edges
     start.setDate(start.getDate() - 7);
     end.setDate(end.getDate() + 7);
 
-    // Find first Saturday on/after start
     const first = new Date(start);
     const day = first.getDay();                // 0 Sun ... 6 Sat
     const daysUntilSat = (6 - day + 7) % 7;
@@ -594,7 +521,7 @@
     for (let d = new Date(first); d < end; d.setDate(d.getDate() + 7)) {
       const satStart = new Date(d);
       const monStart = new Date(d);
-      monStart.setDate(monStart.getDate() + 2); // Sat+Sun -> end Monday 00:00
+      monStart.setDate(monStart.getDate() + 2);
 
       out.push({
         id: `weekend-bg-${i++}`,
@@ -764,10 +691,14 @@
 
     return evs.map((ev, idx) => {
       const hasEnd = !!ev.end;
+
+      const t = SHOW_TIME_IN_LABELS ? formatTimeForLabel(ev.start, ev.end, ev.allDay) : '';
+      const label = (SHOW_TIME_IN_LABELS && t) ? `${ev.title} ${t}` : ev.title;
+
       return {
         id: feed.id.toLowerCase() + '-' + idx,
         group: feed.id,
-        content: ev.title,
+        content: label,     // <<< time after title (option-controlled)
         title: ev.title,
         start: ev.start,
         end: hasEnd ? ev.end : undefined,
@@ -810,7 +741,6 @@
 
     if (total > 0) timeline.fit();
 
-    // Apply weekend shading for current window (if zoomed-in enough)
     setTimeout(refreshWeekendShading, 0);
   }
 
