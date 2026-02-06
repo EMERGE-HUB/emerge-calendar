@@ -288,21 +288,31 @@
   const STORAGE_KEY = 'emergeCalendarHubSelection_wpOnly_v1';
 
   // ============================================================
-  // Grid view: put time after title (month + year grid)
+  // OPTION: show time after title in month + multiMonth grid views
   // ============================================================
-  function gridEventContent(arg) {
-    // Only apply to dayGrid + multiMonth views
-    if (!arg.view.type.startsWith('dayGrid') && !arg.view.type.startsWith('multiMonth')) {
-      return true; // let FullCalendar render normally
-    }
+  const SHOW_TIME_IN_GRID = true; // set false to disable
 
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function gridEventContent(arg) {
+    // Only apply to dayGrid + multiMonth views (month + year grid)
+    const isGrid = arg.view.type.startsWith('dayGrid') || arg.view.type.startsWith('multiMonth');
+    if (!isGrid || !SHOW_TIME_IN_GRID) return true;
+
+    // arg.timeText is already formatted per FullCalendar
     const time = arg.timeText
-      ? `<span class="fc-event-time-inline"> ${arg.timeText}</span>`
+      ? `<span class="fc-event-time-inline"> ${escapeHtml(arg.timeText)}</span>`
       : '';
 
-    // Use textContent-ish output via HTML (title is safe from our source, but keep simple)
     return {
-      html: `<div class="fc-event-title">${arg.event.title}${time}</div>`
+      html: `<div class="fc-event-title">${escapeHtml(arg.event.title)}${time}</div>`
     };
   }
 
@@ -505,7 +515,7 @@
         multiMonthYear: { buttonText: 'Year grid' }
       },
 
-      // >>> KEY ADDITION: show time after title in month/year grid views
+      // >>> KEY: time after title in grid views
       eventContent: gridEventContent
     });
 
