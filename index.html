@@ -195,14 +195,25 @@
     .fc-event.src-wp8, .fc-daygrid-event.src-wp8, .fc-list-event.src-wp8 { background:#2e7d32 !important; border-color:#2e7d32 !important; color:#fff !important; }
     .fc-event.src-wp9, .fc-daygrid-event.src-wp9, .fc-list-event.src-wp9 { background:#374151 !important; border-color:#374151 !important; color:#fff !important; }
 
-    /* ===== List view readability fix ===== */
-    .fc .fc-list-event td{ color: inherit !important; }
-    .fc .fc-list-event .fc-list-event-title,
-    .fc .fc-list-event .fc-list-event-title a,
-    .fc .fc-list-event .fc-list-event-time{
-      color: inherit !important;
-      opacity: 1 !important;
-    }
+/* ===== List view readability fix (soft mint hover) ===== */
+
+/* Default: inherit WP colour */
+.fc .fc-list-event td,
+.fc .fc-list-event .fc-list-event-title,
+.fc .fc-list-event .fc-list-event-title a,
+.fc .fc-list-event .fc-list-event-time{
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* Hover: brighten text for contrast */
+.fc .fc-list-event:hover td,
+.fc .fc-list-event:hover .fc-list-event-title,
+.fc .fc-list-event:hover .fc-list-event-title a,
+.fc .fc-list-event:hover .fc-list-event-time{
+  color: var(--emerge-mint-soft) !important;
+}
+
 
     /* Dark WPs => white text */
     .fc .fc-list-event.src-wp1 td,
@@ -665,3 +676,4 @@
 
 </body>
 </html>
+
