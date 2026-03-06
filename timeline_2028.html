@@ -97,7 +97,7 @@
     }
     .legend-item { display:inline-flex; align-items:center; gap:4px; }
 
-    #timeline { height:calc(100vh - 360px); min-height:480px; width:100%; border:1px solid #e6e8ef; border-radius:8px; }
+    #timeline { width:100%; border:1px solid #e6e8ef; border-radius:8px; }
 
     .vis-item.weekend-bg{
       background:var(--weekend)!important; border:none!important;
@@ -125,7 +125,7 @@
 
     @media(max-width:600px){
       .header-text h1 { font-size:1.1rem; }
-      #timeline { height:calc(100vh - 400px); min-height:400px; }
+
     }
   </style>
 </head>
@@ -495,7 +495,11 @@
   const timeline = new vis.Timeline(container, items, groups, {
     stack:true, horizontalScroll:true, zoomKey:'ctrlKey',
     orientation:{axis:'top'}, margin:{item:10,axis:10},
-    showMajorLabels:true, showMinorLabels:true
+    showMajorLabels:true, showMinorLabels:true,
+    autoResize:true,
+    verticalScroll:false,
+    maxHeight: null,
+    minHeight: 300
   });
 
   function applyGroupVisibility() { FEEDS.forEach(f=>groups.update({id:f.id,visible:!!toggleState[f.id]})); }
