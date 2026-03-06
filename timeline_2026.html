@@ -16,11 +16,27 @@
 
     body { margin:0; padding:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f7fb; color:#222; }
 
-    header { background:#004f9f; color:#fff; padding:16px 24px; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
-    .header-container { display:flex; align-items:center; gap:16px; }
+    header{
+      color:#fff;
+      padding:16px 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      background-image: url("header.png");
+      background-size: cover;
+      background-position: center top;
+      position: relative;
+    }
+    header::before{
+      content:"";
+      position:absolute; inset:0;
+      background: rgba(0,0,0,0.18);
+      pointer-events:none;
+    }
+    .header-container { display:flex; align-items:center; gap:16px; position:relative; z-index:1; }
     .header-logo { background:#fff; padding:6px; border-radius:6px; height:60px; }
     .header-text h1 { margin:0; font-size:1.3rem; }
     .header-text p { margin:4px 0 0; font-size:0.9rem; opacity:0.95; }
+    .brand-footer{ width:100%; display:block; line-height:0; margin-top:0; }
+    .brand-footer img{ width:100%; height:auto; display:block; }
 
     .wp-nav {
       background:#fff; padding:10px 20px; margin:0 auto 20px;
@@ -301,17 +317,23 @@
 
     const vevents = [];
     let current = null;
+    let lastKey = null;
 
     for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
-      if (line.startsWith('END:VEVENT'))   { if (current) vevents.push(current); current = null; continue; }
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; lastKey = null; continue; }
+      if (line.startsWith('END:VEVENT'))   { if (current) vevents.push(current); current = null; lastKey = null; continue; }
       if (!current) continue;
 
       const ci = line.indexOf(':');
+      if (lastKey === 'DESCRIPTION' && (ci < 0 || !/^[A-Z][A-Z0-9-]*[;:]/.test(line.slice(0, ci+1)))) {
+        current.description = (current.description||'') + '\n' + line;
+        continue;
+      }
       if (ci < 0) continue;
       const keyPart = line.slice(0, ci).toUpperCase();
       const value   = line.slice(ci + 1);
       const baseKey = keyPart.split(';')[0];
+      lastKey = baseKey;
 
       if (baseKey === 'SUMMARY')          current.summary     = value;
       if (baseKey === 'DESCRIPTION')      current.description = value.replace(/\n/g, '\n');
@@ -670,5 +692,6 @@
 
   reloadTimeline();
 </script>
+<div class="brand-footer"><img src="footer.png" alt="EMERGE footer" /></div>
 </body>
 </html>
