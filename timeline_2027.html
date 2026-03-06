@@ -213,6 +213,16 @@
   const SHOW_TIME_IN_LABELS = true;
 
   // Symbol filter definitions
+  const SYMBOL_FILTERS = [
+    { key:'MILESTONE',      emoji:'🔷', label:'Milestones',      on:true },
+    { key:'DELIVERABLE',    emoji:'🎯', label:'Deliverables',     on:true },
+    { key:'MONTHLY-MEETING',emoji:'🔁', label:'Monthly Meetings', on:true },
+    { key:'MEETING',        emoji:'📅', label:'Meetings',         on:true },
+    { key:'PROJECT-EVENT',  emoji:'📌', label:'Project Events',   on:true },
+    { key:'PROJECT-TASK',   emoji:'🔧', label:'Project Tasks',    on:true },
+    { key:'GENERAL',        emoji:'📄', label:'General/Untagged', on:true },
+  ];
+
   let symbolState = {};
 
   function loadSymbolState() {
