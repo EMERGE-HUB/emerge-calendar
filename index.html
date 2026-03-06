@@ -140,30 +140,74 @@
     .fc .fc-bg-event{ opacity:1!important; }
     .fc-event-time-inline{ opacity:0.82; font-weight:600; }
 
-    /* Hide the blue dot in list view */
+    /* Hide the blue dot and graphic icon in list view — we use emoji prefixes instead */
     .fc .fc-list-event-dot{ display:none !important; }
+    .fc .fc-list-event-graphic{ display:none !important; }
 
-    /* Tooltip / hover panel */
+    /* Side panel — opens on event click */
+    #eventPanel{
+      position:fixed; top:0; right:-380px; width:360px; height:100vh;
+      background:#fff; box-shadow:-4px 0 20px rgba(0,0,0,0.15);
+      z-index:10000; transition:right 0.25s ease;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    #eventPanel.open{ right:0; }
+    #eventPanel .ep-header{
+      background:var(--emerge-blue); color:#fff;
+      padding:14px 16px; display:flex; align-items:flex-start; gap:10px;
+    }
+    #eventPanel .ep-title{ flex:1; font-weight:700; font-size:1rem; line-height:1.4; }
+    #eventPanel .ep-close{
+      background:none; border:none; color:#fff; font-size:1.4rem;
+      cursor:pointer; line-height:1; padding:0; flex-shrink:0;
+    }
+    #eventPanel .ep-close:hover{ opacity:0.7; }
+    #eventPanel .ep-body{ flex:1; overflow-y:auto; padding:16px; }
+    #eventPanel .ep-section{ margin-bottom:14px; }
+    #eventPanel .ep-label{
+      font-size:0.75rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.06em; color:#6b7280; margin-bottom:4px;
+    }
+    #eventPanel .ep-completed{ color:#16a34a; font-weight:600; font-size:0.9rem; margin-bottom:12px; }
+    #eventPanel .ep-desc{ font-size:0.9rem; color:#374151; line-height:1.6; }
+    #eventPanel .ep-desc p{ margin:0 0 8px; }
+    #eventPanel .ep-desc p:last-child{ margin:0; }
+    #eventPanel .ep-nodesc{ font-size:0.85rem; color:#9ca3af; font-style:italic; }
+    #eventPanel .ep-occur{
+      background:#f0f4ff; border:1px solid #c7d2fe; border-radius:6px;
+      padding:10px 12px; font-size:0.85rem;
+    }
+    #eventPanel .ep-occur-id{
+      font-family:monospace; font-size:0.9rem; color:#3730a3;
+      word-break:break-all; display:block; margin:4px 0 6px;
+    }
+    #eventPanel .ep-copy-btn{
+      background:#4f46e5; color:#fff; border:none; border-radius:4px;
+      padding:5px 12px; font-size:0.8rem; cursor:pointer; font-family:inherit;
+    }
+    #eventPanel .ep-copy-btn:hover{ background:#4338ca; }
+    #eventPanel .ep-hint{ font-size:0.75rem; color:#6366f1; margin-top:6px; line-height:1.4; }
+    #eventPanel .ep-tz-grid{ display:flex; flex-direction:column; gap:4px; margin-top:4px; }
+    #eventPanel .ep-tz-row{ display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#f8faff; border-radius:5px; font-size:0.85rem; }
+    #eventPanel .ep-tz-label{ color:#4b5563; }
+    #eventPanel .ep-tz-time{ font-weight:700; color:#1e3a5f; font-size:0.95rem; }
+    #eventPanel .ep-tz-until{ font-size:0.78rem; color:#6b7280; margin-top:4px; padding:0 2px; }
+    #panelOverlay{
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.15); z-index:9999;
+    }
+    #panelOverlay.open{ display:block; }
+
+    /* Keep hover tooltip for quick peeks — simplified, no click needed */
     .fc-tooltip{
-      position:fixed;
-      z-index:9999;
-      background:#fff;
-      border:1px solid #dde2ee;
-      border-radius:8px;
-      padding:10px 14px;
-      max-width:280px;
-      box-shadow:0 4px 16px rgba(0,0,0,0.15);
-      font-size:0.85rem;
-      line-height:1.5;
-      color:#111827;
-      pointer-events:none;
-      opacity:0;
-      transition:opacity 0.15s ease;
+      position:fixed; z-index:9998; background:#fff;
+      border:1px solid #dde2ee; border-radius:8px; padding:8px 12px;
+      max-width:260px; box-shadow:0 4px 16px rgba(0,0,0,0.12);
+      font-size:0.82rem; line-height:1.4; color:#111827;
+      pointer-events:none; opacity:0; transition:opacity 0.12s ease;
     }
     .fc-tooltip.visible{ opacity:1; }
-    .fc-tooltip .tt-title{ font-weight:700; margin-bottom:4px; font-size:0.9rem; }
-    .fc-tooltip .tt-desc{ color:#4b5563; white-space:pre-wrap; }
-    .fc-tooltip .tt-nodesc{ color:#9ca3af; font-style:italic; }
+    .fc-tooltip .tt-title{ font-weight:700; font-size:0.88rem; margin-bottom:3px; }
+    .fc-tooltip .tt-hint{ color:#6b7280; font-size:0.76rem; font-style:italic; }
 
     /* Updated/amended event styling */
     .fc-event.has-updated .fc-event-title::after,
@@ -212,6 +256,16 @@
 
   <div id="calendar"></div>
   <div id="fcTooltip" class="fc-tooltip"></div>
+
+  <!-- Side panel — opens on event click -->
+  <div id="panelOverlay"></div>
+  <div id="eventPanel">
+    <div class="ep-header">
+      <div class="ep-title" id="epTitle"></div>
+      <button class="ep-close" id="epClose">×</button>
+    </div>
+    <div class="ep-body" id="epBody"></div>
+  </div>
 </main>
 
 <script>
@@ -297,16 +351,19 @@
       const value   = line.slice(ci + 1);
       const baseKey = keyPart.split(';')[0];
 
-      if (baseKey === 'SUMMARY')          current.summary     = value;
-      if (baseKey === 'DESCRIPTION')      current.description = value.replace(/\\n/g, '\n');
-      if (baseKey === 'LOCATION')         current.location    = value;
-      if (baseKey === 'DTSTART')          current.dtstart     = value;
-      if (baseKey === 'DTEND')            current.dtend       = value;
-      if (baseKey === 'RRULE')            current.rrule       = value;
-      if (baseKey === 'CATEGORIES')       current.categories  = value.toUpperCase().split(',').map(s=>s.trim());
-      if (baseKey === 'X-EMERGE-SOURCE')  current.emergeSource = value.toUpperCase().trim();
-      if (baseKey === 'X-EMERGE-TYPE')    current.emergeType   = value.toUpperCase().trim();
-      if (baseKey === 'X-EMERGE-WP')      current.emergeWP     = value.toUpperCase().trim();
+      if (baseKey === 'SUMMARY')           current.summary       = value;
+      if (baseKey === 'DESCRIPTION')       current.description   = value.replace(/\\n/g, '\n');
+      if (baseKey === 'LOCATION')          current.location      = value;
+      if (baseKey === 'DTSTART')           current.dtstart       = value;
+      if (baseKey === 'DTEND')             current.dtend         = value;
+      if (baseKey === 'RRULE')             current.rrule         = value;
+      if (baseKey === 'RECURRENCE-ID')     current.recurrenceId  = value;
+      if (baseKey === 'UID')               current.uid           = value;
+      if (baseKey === 'CATEGORIES')        current.categories    = value.toUpperCase().split(',').map(s=>s.trim());
+      if (baseKey === 'X-EMERGE-SOURCE')   current.emergeSource  = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-TYPE')     current.emergeType    = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-WP')       current.emergeWP      = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-OCCUR')    current.emergeOccur   = value.trim();
     }
 
     function parseTime(v) {
@@ -347,8 +404,19 @@
         emergeSource: ev.emergeSource || '',
         emergeType:   ev.emergeType   || '',
         emergeWP:     ev.emergeWP     || '',
-        categories:   ev.categories   || []
+        categories:   ev.categories   || [],
+        uid:          ev.uid          || '',
+        recurrenceId: ev.recurrenceId || '',
+        completed:    (ev.summary || '').includes('✅'),
+        emergeOccur:  ev.emergeOccur  || ''
       };
+
+      // RECURRENCE-ID = this is an override for a specific occurrence of a recurring event
+      // store as override, handle after all VEVENTs processed
+      if (ev.recurrenceId) {
+        events.push({...base, start:sp.date, end:ep?ep.date:null, isOverride:true});
+        continue;
+      }
 
       if (!ev.rrule) { events.push({...base, start:sp.date, end:ep?ep.date:null}); continue; }
 
@@ -372,7 +440,25 @@
       }
     }
 
-    return events.filter(e => e.start);
+    // Apply RECURRENCE-ID overrides:
+    // For each override VEVENT, remove the generated occurrence matching its date,
+    // then insert the override (with its own title/description) in its place
+    const overrides   = events.filter(e => e.isOverride);
+    const baseEvents  = events.filter(e => !e.isOverride);
+
+    if (overrides.length) {
+      const result = [...baseEvents];
+      for (const ov of overrides) {
+        const ovDate = ov.start.toDateString();
+        const idx = result.findIndex(e => e.uid === ov.uid && e.start.toDateString() === ovDate);
+        if (idx >= 0) result.splice(idx, 1);
+        const clean = {...ov}; delete clean.isOverride;
+        result.push(clean);
+      }
+      return result.filter(e => e.start);
+    }
+
+    return baseEvents.filter(e => e.start);
   }
 
   // ============================================================
@@ -407,7 +493,7 @@
   // HELPERS
   // ============================================================
   function escapeHtml(s) {
-    return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\x22/g,'&quot;').replace(/'/g,'&#39;');
   }
 
   function gridEventContent(arg) {
@@ -496,13 +582,138 @@
     const calendarEl = document.getElementById('calendar');
     const tooltip    = document.getElementById('fcTooltip');
 
-    // Tooltip logic
-    function showTooltip(e, title, description) {
+    function renderDescription(text) {
+      if (!text) return '';
+      // Strip leading ✅ Completed line
+      let cleaned = text.replace(/^✅\s*Completed\n\n?/, '');
+      // Strip OCCUR: line (internal metadata, shown separately in panel)
+      cleaned = cleaned.replace(/^OCCUR:[^\n]*\n?/, '');
+      // Strip REPLACES: line
+      cleaned = cleaned.replace(/^REPLACES:[^\n]*\n?/, '');
+      // Strip START:/END: lines
+      cleaned = cleaned.replace(/^START:[^\n]*\n?/m, '').replace(/^END:[^\n]*\n?/m, '');
+      if (!cleaned.trim()) return '';
+      // Split on single or double newlines — preserve all paragraphs
+      const paras = cleaned.split(/\n/).filter(p => p.trim());
+      return paras.map(p => {
+        const html = escapeHtml(p).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        return `<p class="tt-para">${html}</p>`;
+      }).join('');
+    }
+
+    // ── Timezone display helpers ──────────────────────────────────
+    // Reference timezone offsets from Irish time (Europe/Dublin)
+    // IE = base, CET = IE+1 (winter) / IE+1 (summer — both on DST same week),
+    // EET = IE+2 always (EET is always 2h ahead of GMT, 1h ahead of CET)
+    function formatInZone(date, timeZone, label) {
+      const str = date.toLocaleTimeString('en-IE', {
+        timeZone, hour:'2-digit', minute:'2-digit', hour12:false
+      });
+      return `<span class="ep-tz-row"><span class="ep-tz-label">${label}</span><span class="ep-tz-time">${str}</span></span>`;
+    }
+
+    function buildTimeBlock(start, end) {
+      if (!start) return '';
+      // Only show time block if the event has a time component (not all-day)
+      // FullCalendar sets allDay=true for date-only events
+      return `
+        <div class="ep-tz-grid">
+          ${formatInZone(start, 'Europe/Dublin',   '🇮🇪 Ireland (GMT/IST)')}
+          ${formatInZone(start, 'Europe/Berlin',   '🇩🇪🇫🇷🇪🇸🇸🇰🇳🇴 Central Europe (CET/CEST)')}
+          ${formatInZone(start, 'Europe/Athens',   '🇬🇷🇨🇾 Greece & Cyprus (EET/EEST)')}
+        </div>
+        ${end ? `<div class="ep-tz-until">until ${
+          formatInZone(end,'Europe/Dublin','').replace(/<[^>]+>/g,'').trim()
+        } / ${
+          formatInZone(end,'Europe/Berlin','').replace(/<[^>]+>/g,'').trim()
+        } / ${
+          formatInZone(end,'Europe/Athens','').replace(/<[^>]+>/g,'').trim()
+        } (IE/CET/EET)</div>` : ''}`;
+    }
+    const panel   = document.getElementById('eventPanel');
+    const overlay = document.getElementById('panelOverlay');
+    const epTitle = document.getElementById('epTitle');
+    const epBody  = document.getElementById('epBody');
+
+    function openPanel(title, description, completed, occurId, wpLabel, start, end, allDay) {
+      epTitle.textContent = title;
+
+      let html = '';
+
+      // Date + time
+      if (start) {
+        const dateStr = start.toLocaleDateString('en-IE', {
+          weekday:'long', year:'numeric', month:'long', day:'numeric'
+        });
+        html += `<div class="ep-section"><div class="ep-label">Date</div><div>${escapeHtml(dateStr)}</div></div>`;
+
+        if (!allDay) {
+          html += `<div class="ep-section"><div class="ep-label">Time (all partner zones)</div>${buildTimeBlock(start, end)}</div>`;
+        }
+      }
+
+      // WP source
+      if (wpLabel) {
+        html += `<div class="ep-section"><div class="ep-label">Work Package</div><div>${escapeHtml(wpLabel)}</div></div>`;
+      }
+
+      // Completed
+      if (completed || title.includes('✅')) {
+        html += `<div class="ep-completed">✅ Completed</div>`;
+      }
+
+      // Description
+      const descHtml = renderDescription(description);
+      html += `<div class="ep-section"><div class="ep-label">Notes</div>`;
+      html += descHtml
+        ? `<div class="ep-desc">${descHtml}</div>`
+        : `<div class="ep-nodesc">No notes</div>`;
+      html += `</div>`;
+
+      // Occurrence ID
+      if (occurId) {
+        const safeId = escapeHtml(occurId);
+        html += `<div class="ep-section">
+          <div class="ep-label">🔁 Occurrence ID</div>
+          <div class="ep-occur">
+            <span class="ep-occur-id">${safeId}</span>
+            <button class="ep-copy-btn" data-occur="${safeId}" id="epCopyBtn">Copy ID</button>
+            <div class="ep-hint">To reschedule this occurrence, create a new Planner task with:<br><strong>REPLACES:${safeId}</strong><br>in the Notes field.</div>
+          </div>
+        </div>`;
+      }
+
+      epBody.innerHTML = html;
+
+      // Wire up copy button safely via event listener (no inline onclick)
+      const copyBtn = document.getElementById('epCopyBtn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+          const id = this.dataset.occur;
+          navigator.clipboard.writeText(id).then(() => {
+            this.textContent = 'Copied ✓';
+            setTimeout(() => this.textContent = 'Copy ID', 1500);
+          }).catch(() => { window.prompt('Copy this ID:', id); });
+        });
+      }
+
+      panel.classList.add('open');
+      overlay.classList.add('open');
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      overlay.classList.remove('open');
+    }
+
+    document.getElementById('epClose').addEventListener('click', closePanel);
+    overlay.addEventListener('click', closePanel);
+
+    // ── Hover tooltip — quick peek only ──────────────────────────
+    function showTooltip(e, title) {
       tooltip.innerHTML =
         `<div class="tt-title">${escapeHtml(title)}</div>` +
-        (description
-          ? `<div class="tt-desc">${escapeHtml(description)}</div>`
-          : `<div class="tt-nodesc">No notes</div>`);
+        `<div class="tt-hint">Click for details</div>`;
       moveTooltip(e);
       tooltip.classList.add('visible');
     }
@@ -551,14 +762,26 @@
       },
       eventContent: gridEventContent,
 
-      // Hover tooltip showing notes/description
+      // Simple hover tooltip — title + "click for details"
       eventDidMount: function(info) {
-        const el = info.el;
+        const el    = info.el;
         const title = info.event.title;
-        const desc  = info.event.extendedProps?.description || '';
-        el.addEventListener('mouseenter', e => showTooltip(e, title, desc));
+        el.addEventListener('mouseenter', e => showTooltip(e, title));
         el.addEventListener('mousemove',  e => moveTooltip(e));
         el.addEventListener('mouseleave', hideTooltip);
+      },
+
+      // Click opens full side panel
+      eventClick: function(info) {
+        info.jsEvent.preventDefault();
+        const ev       = info.event;
+        const props    = ev.extendedProps || {};
+        const desc     = props.description || '';
+        const completed= props.completed   || false;
+        const occurId  = props.emergeOccur || '';
+        const wpLabel  = props.emergeWP    || '';
+        hideTooltip();
+        openPanel(ev.title, desc, completed, occurId, wpLabel, ev.start, ev.end, ev.allDay);
       }
     });
 
