@@ -465,8 +465,50 @@
       const utc    = ev.dtstart.endsWith('Z');
       const durMs  = (ep && !base.allDay) ? ep.date - sp.date : null;
 
+      // Parse BYDAY for relative monthly recurrence e.g. "1TU" = first Tuesday, "-1MO" = last Monday
+      const DAYS_MAP = {MO:1,TU:2,WE:3,TH:4,FR:5,SA:6,SU:0};
+      function nthWeekdayOfMonth(year, month, n, wd) {
+        // n=1 first, n=2 second... n=-1 last
+        if (n > 0) {
+          const first = new Date(year, month, 1);
+          const diff = (wd - first.getDay() + 7) % 7;
+          return new Date(year, month, 1 + diff + (n-1)*7);
+        } else {
+          // last day of month
+          const last = new Date(year, month+1, 0);
+          const diff = (last.getDay() - wd + 7) % 7;
+          const base = new Date(year, month+1, 0 - diff);
+          return new Date(base.getTime() + (n+1)*7*24*60*60*1000);
+        }
+      }
+
+      let byDayN = null, byDayWD = null;
+      if (rule.BYDAY) {
+        const m = rule.BYDAY.match(/^(-?\d+)([A-Z]{2})$/);
+        if (m) { byDayN = parseInt(m[1]); byDayWD = DAYS_MAP[m[2]]; }
+      }
+
       for (let i=0; i<240; i++) {
-        const oStart = addMonths(sp.date, i, utc);
+        let oStart;
+        if (byDayN !== null && byDayWD !== null) {
+          // Relative monthly — e.g. first Tuesday
+          const baseDate = utc
+            ? new Date(Date.UTC(sp.date.getUTCFullYear(), sp.date.getUTCMonth()+i, 1))
+            : new Date(sp.date.getFullYear(), sp.date.getMonth()+i, 1);
+          const yr = utc ? baseDate.getUTCFullYear() : baseDate.getFullYear();
+          const mo = utc ? baseDate.getUTCMonth()    : baseDate.getMonth();
+          const target = nthWeekdayOfMonth(yr, mo, byDayN, byDayWD);
+          if (utc) {
+            oStart = new Date(Date.UTC(target.getFullYear(), target.getMonth(), target.getDate(),
+              sp.date.getUTCHours(), sp.date.getUTCMinutes(), sp.date.getUTCSeconds()));
+          } else {
+            oStart = new Date(target.getFullYear(), target.getMonth(), target.getDate(),
+              sp.date.getHours(), sp.date.getMinutes(), sp.date.getSeconds());
+          }
+        } else {
+          // Absolute monthly — same date each month
+          oStart = addMonths(sp.date, i, utc);
+        }
         if (until && oStart > until) break;
         const oEnd = base.allDay
           ? (ep ? addMonths(ep.date, i, utc) : null)
