@@ -24,38 +24,6 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
-      /* EMERGE branded background — decorative rounded rectangles */
-      background-color: #f5f7fb;
-      background-image:
-        /* top-left mint */
-        radial-gradient(ellipse 90px 140px at -10px 60px, #bfeee6 0%, #bfeee6 100%),
-        /* top-left mint (rotated) */
-        radial-gradient(ellipse 65px 110px at 60px 10px, #bfeee6 0%, #bfeee6 100%),
-        /* top-center yellow */
-        radial-gradient(ellipse 80px 120px at 34% 0px, #f5d800 0%, #f5d800 100%),
-        /* top-center purple */
-        radial-gradient(ellipse 70px 100px at 48% -10px, #9b8fc4 0%, #9b8fc4 100%),
-        /* top-right mint */
-        radial-gradient(ellipse 75px 120px at 82% -10px, #bfeee6 0%, #bfeee6 100%),
-        /* top-right yellow */
-        radial-gradient(ellipse 70px 130px at 100% 30px, #f5d800 0%, #f5d800 100%),
-        /* bottom-left navy block */
-        radial-gradient(ellipse 160px 200px at -20px 105%, #2d2b8c 0%, #2d2b8c 100%),
-        /* bottom teal strip */
-        linear-gradient(to right, #bfeee6 0%, #9b8fc4 100%);
-      background-repeat: no-repeat;
-      background-size:
-        120px 180px, 90px 140px,
-        110px 150px, 95px 130px,
-        100px 150px, 95px 160px,
-        280px 280px,
-        100% 8px;
-      background-position:
-        -20px 40px, 50px -10px,
-        33% -20px, 47% -30px,
-        80% -20px, calc(100% + 10px) 10px,
-        -40px calc(100% + 40px),
-        0 100%;
     }
 
     header{
@@ -63,33 +31,28 @@
       color:#fff;
       padding:16px 24px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      position: relative;
-      overflow: hidden;
-    }
-    /* Decorative shapes in header matching brand */
-    header::before {
-      content:'';
-      position:absolute; top:-30px; right:120px;
-      width:70px; height:110px;
-      background:#f5d800; border-radius:30px;
-      transform: rotate(-15deg); opacity:0.9;
-      pointer-events:none;
-    }
-    header::after {
-      content:'';
-      position:absolute; top:-20px; right:60px;
-      width:55px; height:90px;
-      background:#bfeee6; border-radius:25px;
-      transform: rotate(-8deg); opacity:0.85;
-      pointer-events:none;
     }
 
-    .header-container{ display:flex; align-items:center; gap:16px; position:relative; z-index:1; }
+    .header-container{ display:flex; align-items:center; gap:16px; }
     .header-logo{ background:#ffffff; padding:6px; border-radius:6px; height:60px; }
     .header-text h1{ margin:0; font-size:1.3rem; }
     .header-text p{ margin:4px 0 0; font-size:0.9rem; opacity:0.95; }
 
     main{ max-width:1200px; margin:20px auto; padding:0 12px 40px; }
+
+    /* Brand header/footer images */
+    .brand-header{
+      width:100%; display:block; line-height:0;
+    }
+    .brand-header img{
+      width:100%; height:auto; display:block;
+    }
+    .brand-footer{
+      width:100%; display:block; line-height:0; margin-top:40px;
+    }
+    .brand-footer img{
+      width:100%; height:auto; display:block;
+    }
 
     .card{
       background: var(--card);
@@ -269,6 +232,7 @@
 </head>
 
 <body>
+<div class="brand-header"><img src="header.png" alt="EMERGE header" /></div>
 <header>
   <div class="header-container">
     <img src="https://euemerge.eu/wp-content/uploads/2025/05/emerge_website.png" alt="EMERGE Logo" class="header-logo" />
@@ -320,6 +284,7 @@
     <div class="ep-body" id="epBody"></div>
   </div>
 </main>
+<div class="brand-footer"><img src="footer.png" alt="EMERGE footer" /></div>
 
 <script>
   // ============================================================
@@ -392,17 +357,24 @@
 
     const vevents = [];
     let current = null;
+    let lastKey = null;
 
     for (const line of lines) {
-      if (line.startsWith('BEGIN:VEVENT')) { current = {}; continue; }
-      if (line.startsWith('END:VEVENT'))   { if (current) vevents.push(current); current = null; continue; }
+      if (line.startsWith('BEGIN:VEVENT')) { current = {}; lastKey = null; continue; }
+      if (line.startsWith('END:VEVENT'))   { if (current) vevents.push(current); current = null; lastKey = null; continue; }
       if (!current) continue;
 
       const ci = line.indexOf(':');
-      if (ci < 0) continue;
+      // If no colon, or line looks like a continuation of description (starts with ** or plain text
+      // with no known ICS key), append to last DESCRIPTION
+      if (ci < 0 || (lastKey === 'DESCRIPTION' && !line.match(/^[A-Z][A-Z0-9\-]*[;:]/))) {
+        if (lastKey === 'DESCRIPTION') current.description = (current.description||'') + '\n' + line;
+        continue;
+      }
       const keyPart = line.slice(0, ci).toUpperCase();
       const value   = line.slice(ci + 1);
       const baseKey = keyPart.split(';')[0];
+      lastKey = baseKey;
 
       if (baseKey === 'SUMMARY')           current.summary       = value;
       if (baseKey === 'DESCRIPTION')       current.description   = value.replace(/\\n/g, '\n');
