@@ -280,9 +280,7 @@
   // SHARED ICS PARSER — RRULE MONTHLY + TZID + X-EMERGE props
   // ============================================================
   function parseICS(icsText) {
-    const rawLines = icsText.split(/
-?
-/);
+    const rawLines = icsText.split(/\r?\n/);
     const lines = [];
     for (const line of rawLines) {
       if (!line) continue;
@@ -306,8 +304,7 @@
       const baseKey = keyPart.split(';')[0];
 
       if (baseKey === 'SUMMARY')          current.summary     = value;
-      if (baseKey === 'DESCRIPTION')      current.description = value.replace(/\n/g, '
-');
+      if (baseKey === 'DESCRIPTION')      current.description = value.replace(/\n/g, '\n');
       if (baseKey === 'LOCATION')         current.location    = value;
       if (baseKey === 'DTSTART')          current.dtstart     = value;
       if (baseKey === 'DTEND')            current.dtend       = value;
