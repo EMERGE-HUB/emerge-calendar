@@ -140,6 +140,31 @@
     .fc .fc-bg-event{ opacity:1!important; }
     .fc-event-time-inline{ opacity:0.82; font-weight:600; }
 
+    /* Hide the blue dot in list view */
+    .fc .fc-list-event-dot{ display:none !important; }
+
+    /* Tooltip / hover panel */
+    .fc-tooltip{
+      position:fixed;
+      z-index:9999;
+      background:#fff;
+      border:1px solid #dde2ee;
+      border-radius:8px;
+      padding:10px 14px;
+      max-width:280px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.15);
+      font-size:0.85rem;
+      line-height:1.5;
+      color:#111827;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity 0.15s ease;
+    }
+    .fc-tooltip.visible{ opacity:1; }
+    .fc-tooltip .tt-title{ font-weight:700; margin-bottom:4px; font-size:0.9rem; }
+    .fc-tooltip .tt-desc{ color:#4b5563; white-space:pre-wrap; }
+    .fc-tooltip .tt-nodesc{ color:#9ca3af; font-style:italic; }
+
     /* Updated/amended event styling */
     .fc-event.has-updated .fc-event-title::after,
     .fc-daygrid-event.has-updated .fc-event-title::after{ content:' ⚠️'; }
@@ -186,6 +211,7 @@
   </div>
 
   <div id="calendar"></div>
+  <div id="fcTooltip" class="fc-tooltip"></div>
 </main>
 
 <script>
@@ -468,6 +494,29 @@
   document.addEventListener('DOMContentLoaded', async function() {
     const statusEl  = document.getElementById('status');
     const calendarEl = document.getElementById('calendar');
+    const tooltip    = document.getElementById('fcTooltip');
+
+    // Tooltip logic
+    function showTooltip(e, title, description) {
+      tooltip.innerHTML =
+        `<div class="tt-title">${escapeHtml(title)}</div>` +
+        (description
+          ? `<div class="tt-desc">${escapeHtml(description)}</div>`
+          : `<div class="tt-nodesc">No notes</div>`);
+      moveTooltip(e);
+      tooltip.classList.add('visible');
+    }
+    function moveTooltip(e) {
+      const pad = 12;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      // keep on screen
+      if (x + 300 > window.innerWidth)  x = e.clientX - 300 - pad;
+      if (y + 200 > window.innerHeight) y = e.clientY - 200 - pad;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top  = y + 'px';
+    }
+    function hideTooltip() { tooltip.classList.remove('visible'); }
 
     loadSymbolState();
     renderSymbolFilters();
@@ -477,6 +526,7 @@
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'listYear',
+      contentHeight: 'auto',   // expand to show all entries — no scroll box
       customButtons: {
         timeline: {
           text: 'Timeline',
@@ -499,7 +549,17 @@
         listYear: { buttonText:'Year list' },
         multiMonthYear: { buttonText:'Year grid' }
       },
-      eventContent: gridEventContent
+      eventContent: gridEventContent,
+
+      // Hover tooltip showing notes/description
+      eventDidMount: function(info) {
+        const el = info.el;
+        const title = info.event.title;
+        const desc  = info.event.extendedProps?.description || '';
+        el.addEventListener('mouseenter', e => showTooltip(e, title, desc));
+        el.addEventListener('mousemove',  e => moveTooltip(e));
+        el.addEventListener('mouseleave', hideTooltip);
+      }
     });
 
     calendar.render();
@@ -559,6 +619,8 @@
     }
 
     function updateStatus() {
+      // DEBUG: comment out below to hide loaded status line
+      /*
       const parts = [];
       for (const key of activeSourceIds.keys()) {
         if (key === 'holidays') continue;
@@ -571,6 +633,8 @@
       statusEl.textContent = parts.length
         ? `Loaded: ${parts.join(' + ')}. ${holTxt} loaded in background.`
         : `No WP feeds selected. ${holTxt} loaded in background.`;
+      */
+      statusEl.textContent = '';
     }
 
     async function loadHolidaysAlwaysOn() {
@@ -588,7 +652,7 @@
 
     async function applySelection(nextSelected) {
       clearError();
-      statusEl.textContent = 'Loading selected feeds…';
+      // statusEl.textContent = 'Loading selected feeds…'; // DEBUG
 
       for (const key of Array.from(activeSourceIds.keys())) {
         if (key==='holidays') continue;
