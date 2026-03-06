@@ -161,8 +161,22 @@
       transition:opacity 0.15s ease;
     }
     .fc-tooltip.visible{ opacity:1; }
-    .fc-tooltip .tt-title{ font-weight:700; margin-bottom:4px; font-size:0.9rem; }
-    .fc-tooltip .tt-desc{ color:#4b5563; white-space:pre-wrap; }
+    .fc-tooltip .tt-title{ font-weight:700; margin-bottom:6px; font-size:0.9rem; }
+    .fc-tooltip .tt-completed{ color:#16a34a; font-weight:600; font-size:0.82rem; margin-bottom:6px; }
+    .fc-tooltip .tt-occur{
+      margin-top:8px; padding:6px 8px; background:#f0f4ff;
+      border:1px solid #c7d2fe; border-radius:5px;
+      font-size:0.78rem; color:#3730a3;
+    }
+    .fc-tooltip .tt-occur-label{ font-weight:600; display:block; margin-bottom:2px; }
+    .fc-tooltip .tt-occur-id{
+      font-family: monospace; letter-spacing:0.02em;
+      cursor:pointer; text-decoration:underline dotted;
+    }
+    .fc-tooltip .tt-occur-hint{ color:#6366f1; font-size:0.72rem; display:block; margin-top:2px; }
+    .fc-tooltip .tt-desc{ color:#374151; }
+    .fc-tooltip .tt-para{ margin:0 0 6px; }
+    .fc-tooltip .tt-para:last-child{ margin-bottom:0; }
     .fc-tooltip .tt-nodesc{ color:#9ca3af; font-style:italic; }
 
     /* Updated/amended event styling */
@@ -297,16 +311,19 @@
       const value   = line.slice(ci + 1);
       const baseKey = keyPart.split(';')[0];
 
-      if (baseKey === 'SUMMARY')          current.summary     = value;
-      if (baseKey === 'DESCRIPTION')      current.description = value.replace(/\\n/g, '\n');
-      if (baseKey === 'LOCATION')         current.location    = value;
-      if (baseKey === 'DTSTART')          current.dtstart     = value;
-      if (baseKey === 'DTEND')            current.dtend       = value;
-      if (baseKey === 'RRULE')            current.rrule       = value;
-      if (baseKey === 'CATEGORIES')       current.categories  = value.toUpperCase().split(',').map(s=>s.trim());
-      if (baseKey === 'X-EMERGE-SOURCE')  current.emergeSource = value.toUpperCase().trim();
-      if (baseKey === 'X-EMERGE-TYPE')    current.emergeType   = value.toUpperCase().trim();
-      if (baseKey === 'X-EMERGE-WP')      current.emergeWP     = value.toUpperCase().trim();
+      if (baseKey === 'SUMMARY')           current.summary       = value;
+      if (baseKey === 'DESCRIPTION')       current.description   = value.replace(/\\n/g, '\n');
+      if (baseKey === 'LOCATION')          current.location      = value;
+      if (baseKey === 'DTSTART')           current.dtstart       = value;
+      if (baseKey === 'DTEND')             current.dtend         = value;
+      if (baseKey === 'RRULE')             current.rrule         = value;
+      if (baseKey === 'RECURRENCE-ID')     current.recurrenceId  = value;
+      if (baseKey === 'UID')               current.uid           = value;
+      if (baseKey === 'CATEGORIES')        current.categories    = value.toUpperCase().split(',').map(s=>s.trim());
+      if (baseKey === 'X-EMERGE-SOURCE')   current.emergeSource  = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-TYPE')     current.emergeType    = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-WP')       current.emergeWP      = value.toUpperCase().trim();
+      if (baseKey === 'X-EMERGE-OCCUR')    current.emergeOccur   = value.trim();
     }
 
     function parseTime(v) {
@@ -347,8 +364,19 @@
         emergeSource: ev.emergeSource || '',
         emergeType:   ev.emergeType   || '',
         emergeWP:     ev.emergeWP     || '',
-        categories:   ev.categories   || []
+        categories:   ev.categories   || [],
+        uid:          ev.uid          || '',
+        recurrenceId: ev.recurrenceId || '',
+        completed:    (ev.summary || '').includes('✅'),
+        emergeOccur:  ev.emergeOccur  || ''
       };
+
+      // RECURRENCE-ID = this is an override for a specific occurrence of a recurring event
+      // store as override, handle after all VEVENTs processed
+      if (ev.recurrenceId) {
+        events.push({...base, start:sp.date, end:ep?ep.date:null, isOverride:true});
+        continue;
+      }
 
       if (!ev.rrule) { events.push({...base, start:sp.date, end:ep?ep.date:null}); continue; }
 
@@ -372,7 +400,25 @@
       }
     }
 
-    return events.filter(e => e.start);
+    // Apply RECURRENCE-ID overrides:
+    // For each override VEVENT, remove the generated occurrence matching its date,
+    // then insert the override (with its own title/description) in its place
+    const overrides   = events.filter(e => e.isOverride);
+    const baseEvents  = events.filter(e => !e.isOverride);
+
+    if (overrides.length) {
+      const result = [...baseEvents];
+      for (const ov of overrides) {
+        const ovDate = ov.start.toDateString();
+        const idx = result.findIndex(e => e.uid === ov.uid && e.start.toDateString() === ovDate);
+        if (idx >= 0) result.splice(idx, 1);
+        const clean = {...ov}; delete clean.isOverride;
+        result.push(clean);
+      }
+      return result.filter(e => e.start);
+    }
+
+    return baseEvents.filter(e => e.start);
   }
 
   // ============================================================
@@ -496,13 +542,36 @@
     const calendarEl = document.getElementById('calendar');
     const tooltip    = document.getElementById('fcTooltip');
 
-    // Tooltip logic
-    function showTooltip(e, title, description) {
+    function renderDescription(text) {
+      if (!text) return '';
+      // Strip leading ✅ Completed line — shown separately via title tick
+      const cleaned = text.replace(/^✅\s*Completed\n\n?/, '');
+      if (!cleaned.trim()) return '';
+      const paras = cleaned.split(/\n+/).filter(p => p.trim());
+      return paras.map(p => {
+        const html = escapeHtml(p).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        return `<p class="tt-para">${html}</p>`;
+      }).join('');
+    }
+
+    function showTooltip(e, title, description, completed, occurId) {
+      const isCompleted = completed || title.includes('✅');
+      const descHtml = renderDescription(description);
+      let occurHtml = '';
+      if (occurId) {
+        occurHtml = `<div class="tt-occur">
+          <span class="tt-occur-label">🔁 Occurrence ID</span>
+          <span class="tt-occur-id" title="Click to copy" onclick="navigator.clipboard.writeText('${occurId}').then(()=>{this.textContent='${occurId} ✓';setTimeout(()=>this.textContent='${occurId}',1500)})">${occurId}</span>
+          <span class="tt-occur-hint">To reschedule: create a new task with REPLACES:${occurId} in Notes</span>
+        </div>`;
+      }
       tooltip.innerHTML =
         `<div class="tt-title">${escapeHtml(title)}</div>` +
-        (description
-          ? `<div class="tt-desc">${escapeHtml(description)}</div>`
-          : `<div class="tt-nodesc">No notes</div>`);
+        (isCompleted ? `<div class="tt-completed">✅ Completed</div>` : '') +
+        (descHtml ? `<div class="tt-desc">${descHtml}</div>` : `<div class="tt-nodesc">No notes</div>`) +
+        occurHtml;
+      // Allow pointer events on tooltip when it has clickable content
+      tooltip.style.pointerEvents = occurId ? 'auto' : 'none';
       moveTooltip(e);
       tooltip.classList.add('visible');
     }
@@ -555,9 +624,11 @@
       eventDidMount: function(info) {
         const el = info.el;
         const title = info.event.title;
-        const desc  = info.event.extendedProps?.description || '';
-        el.addEventListener('mouseenter', e => showTooltip(e, title, desc));
-        el.addEventListener('mousemove',  e => moveTooltip(e));
+        const desc      = info.event.extendedProps?.description || '';
+        const completed = info.event.extendedProps?.completed || false;
+        const occurId   = info.event.extendedProps?.emergeOccur || '';
+        el.addEventListener('mouseenter', e => showTooltip(e, title, desc, completed, occurId));
+        el.addEventListener('mousemove',  e => { if (!occurId) moveTooltip(e); });
         el.addEventListener('mouseleave', hideTooltip);
       }
     });
