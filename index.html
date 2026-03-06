@@ -374,12 +374,13 @@
       if (!current) continue;
 
       const ci = line.indexOf(':');
-      // If no colon, or line looks like a continuation of description (starts with ** or plain text
-      // with no known ICS key), append to last DESCRIPTION
-      if (ci < 0 || (lastKey === 'DESCRIPTION' && !line.match(/^[A-Z][A-Z0-9\-]*[;:]/))) {
-        if (lastKey === 'DESCRIPTION') current.description = (current.description||'') + '\n' + line;
+      // Continuation of DESCRIPTION: if lastKey is DESCRIPTION and this line
+      // doesn't look like a proper ICS property (uppercase letters/digits/hyphens only before colon)
+      if (lastKey === 'DESCRIPTION' && (ci < 0 || !/^[A-Z][A-Z0-9-]*[;:]/.test(line.slice(0, ci+1)))) {
+        current.description = (current.description||'') + '\n' + line;
         continue;
       }
+      if (ci < 0) continue;
       const keyPart = line.slice(0, ci).toUpperCase();
       const value   = line.slice(ci + 1);
       const baseKey = keyPart.split(';')[0];
@@ -716,13 +717,14 @@
 
       // Occurrence ID
       if (occurId) {
-        const safeId = escapeHtml(occurId);
+        const replaceStr = 'REPLACES:' + occurId;
+        const safeReplace = escapeHtml(replaceStr);
         html += `<div class="ep-section">
-          <div class="ep-label">🔁 Occurrence ID</div>
+          <div class="ep-label">🔁 Reschedule ID</div>
           <div class="ep-occur">
-            <span class="ep-occur-id">${safeId}</span>
-            <button class="ep-copy-btn" data-occur="${safeId}" id="epCopyBtn">Copy ID</button>
-            <div class="ep-hint">To reschedule this occurrence, create a new Planner task with:<br><strong>REPLACES:${safeId}</strong><br>in the Notes field.</div>
+            <span class="ep-occur-id">${safeReplace}</span>
+            <button class="ep-copy-btn" data-occur="${safeReplace}" id="epCopyBtn">Copy</button>
+            <div class="ep-hint">Paste this into the Notes field of a new Planner task to reschedule this occurrence.</div>
           </div>
         </div>`;
       }
@@ -736,8 +738,8 @@
           const id = this.dataset.occur;
           navigator.clipboard.writeText(id).then(() => {
             this.textContent = 'Copied ✓';
-            setTimeout(() => this.textContent = 'Copy ID', 1500);
-          }).catch(() => { window.prompt('Copy this ID:', id); });
+            setTimeout(() => this.textContent = 'Copy', 1500);
+          }).catch(() => { window.prompt('Copy this:', id); });
         });
       }
 
