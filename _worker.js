@@ -27,7 +27,7 @@ export default {
       });
     }
 
-    // All other requests pass through to the Pages site normally
-    return fetch(request);
+    // For all other requests, pass through to Pages static assets
+    return env.ASSETS.fetch(request);
   }
 };
